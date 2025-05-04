@@ -13,8 +13,8 @@ public class ChessPosition {
     public ChessPosition(int row, int col) {
         r = row; c = col;
     }
-    int r;
-    int c;
+    private int r;
+    private int c;
     /**
      * @return which row this position is in
      * 1 codes for the bottom row
