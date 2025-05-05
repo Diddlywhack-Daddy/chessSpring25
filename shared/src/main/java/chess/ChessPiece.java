@@ -68,6 +68,9 @@ public class ChessPiece {
 
     private Collection<ChessMove> getPawnMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> pawnMoves = new ArrayList<>();
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+        ChessGame.TeamColor myColor = getTeamColor();
         return pawnMoves;
     }
 
@@ -143,6 +146,41 @@ public class ChessPiece {
 
     private Collection<ChessMove> getKnightMoves(ChessBoard board, ChessPosition myPosition) {
         Collection<ChessMove> knightMoves = new ArrayList<>();
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+        ChessGame.TeamColor myColor = getTeamColor();
+
+        //Adds possible moves to possibleMoves
+        Vector<ChessPosition> possibleMoves = new Vector<>();
+        possibleMoves.add(new ChessPosition(myRow+1,myCol+2));
+        possibleMoves.add(new ChessPosition(myRow+1,myCol-2));
+        possibleMoves.add(new ChessPosition(myRow+2,myCol-1));
+        possibleMoves.add(new ChessPosition(myRow+2,myCol+1));
+        possibleMoves.add(new ChessPosition(myRow-1,myCol+2));
+        possibleMoves.add(new ChessPosition(myRow-1,myCol-2));
+        possibleMoves.add(new ChessPosition(myRow-2,myCol+1));
+        possibleMoves.add(new ChessPosition(myRow-2,myCol-1));
+
+        //Determines if possibleMoves belong in knightMoves
+        while (!possibleMoves.isEmpty()) {
+            ChessPosition pos = possibleMoves.firstElement();
+
+            //safety check to ensure pos is on the board
+            if (!isOnBoard(pos)) {
+                possibleMoves.remove(0);
+            }
+
+            //if pos is clear or populated by the enemy, adds it to knightMoves
+            else if (isClear(board, pos)) {
+                knightMoves.add(new ChessMove(myPosition, pos, null));
+                possibleMoves.remove(0);
+            } else if (board.getPiece(pos).getTeamColor() != myColor) {
+                knightMoves.add(new ChessMove(myPosition, pos, null));
+                possibleMoves.remove(0);
+            } else {
+                possibleMoves.remove(0);
+            }
+        }
         return knightMoves;
     }
 
