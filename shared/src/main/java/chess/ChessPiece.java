@@ -76,7 +76,8 @@ public class ChessPiece {
 
         //White version of possibleMoves vector
         if (myColor == ChessGame.TeamColor.WHITE) {
-            if (myPosition.getRow() == 2 && isClear(board, new ChessPosition(myRow + 2, myCol))) {
+            if (myPosition.getRow() == 2 && isClear(board, new ChessPosition(myRow + 2, myCol)) &&
+            isClear(board, new ChessPosition(myRow+1, myCol))) {
                 possibleMoves.add(new ChessPosition(myRow + 2, myCol));
             }
             ChessPosition forward = new ChessPosition(myRow + 1, myCol);
@@ -94,9 +95,30 @@ public class ChessPiece {
                 possibleMoves.add(rightCapture);
             }
         }
+        //When myColor == Black
+        else{
+            if (myPosition.getRow() == 7 && isClear(board, new ChessPosition(myRow - 2, myCol)) &&
+                    isClear(board,new ChessPosition(myRow-1,myCol))) {
+                possibleMoves.add(new ChessPosition(myRow - 2, myCol));
+            }
+            ChessPosition forward = new ChessPosition(myRow - 1, myCol);
+            if (isOnBoard(forward) && isClear(board, forward)) {
+                possibleMoves.add(new ChessPosition(myRow - 1, myCol));
+            }
+            ChessPosition leftCapture = new ChessPosition(myRow - 1, myCol - 1);
+            ChessPosition rightCapture = new ChessPosition(myRow - 1, myCol + 1);
+            if (isOnBoard(leftCapture) && !isClear(board, leftCapture) &&
+                    board.getPiece(leftCapture).getTeamColor() != myColor) {
+                possibleMoves.add(leftCapture);
+            }
+            if (isOnBoard(rightCapture) && !isClear(board, rightCapture) &&
+                    board.getPiece(rightCapture).getTeamColor() != myColor) {
+                possibleMoves.add(rightCapture);
+            }
+        }
 
 
-        //White version of possibleMoves resolver
+
         //PromotionMoves First
 
         while (!possibleMoves.isEmpty()) {
