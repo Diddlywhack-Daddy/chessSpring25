@@ -71,6 +71,62 @@ public class ChessPiece {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
         ChessGame.TeamColor myColor = getTeamColor();
+
+        Vector<ChessPosition> possibleMoves = new Vector<>();
+
+        //White version of possibleMoves vector
+        if (myColor == ChessGame.TeamColor.WHITE) {
+            if (myPosition.getRow() == 2 && isClear(board, new ChessPosition(myRow + 2, myCol))) {
+                possibleMoves.add(new ChessPosition(myRow + 2, myCol));
+            }
+            ChessPosition forward = new ChessPosition(myRow + 1, myCol);
+            if (isOnBoard(forward) && isClear(board, forward)) {
+                possibleMoves.add(new ChessPosition(myRow + 1, myCol));
+            }
+            ChessPosition leftCapture = new ChessPosition(myRow + 1, myCol - 1);
+            ChessPosition rightCapture = new ChessPosition(myRow + 1, myCol + 1);
+            if (isOnBoard(leftCapture) && !isClear(board, leftCapture) &&
+                    board.getPiece(leftCapture).getTeamColor() != myColor) {
+                possibleMoves.add(leftCapture);
+            }
+            if (isOnBoard(rightCapture) && !isClear(board, rightCapture) &&
+                    board.getPiece(rightCapture).getTeamColor() != myColor) {
+                possibleMoves.add(rightCapture);
+            }
+
+
+            //White version of possibleMoves resolver
+            //PromotionMoves First
+            if (myColor == ChessGame.TeamColor.WHITE) {
+                while (!possibleMoves.isEmpty()) {
+                    ChessPosition pos = possibleMoves.firstElement();
+                    if(!isOnBoard(pos)){
+                        possibleMoves.remove(0);
+                    }
+                    if (possibleMoves.firstElement().getRow() == 8) {
+                        ChessMove rookPromo = new ChessMove(myPosition, pos, PieceType.ROOK);
+                        ChessMove knightPromo = new ChessMove(myPosition, pos, PieceType.KNIGHT);
+                        ChessMove bishopPromo = new ChessMove(myPosition, pos, PieceType.BISHOP);
+                        ChessMove queenPromo = new ChessMove(myPosition, pos, PieceType.QUEEN);
+                        pawnMoves.add(rookPromo);
+                        pawnMoves.add(knightPromo);
+                        pawnMoves.add(bishopPromo);
+                        pawnMoves.add(queenPromo);
+                        possibleMoves.remove(0);
+                    }
+
+                    // White nonPromotion moves
+                    else{
+                        pawnMoves.add(new ChessMove(myPosition,pos,null));
+                        possibleMoves.remove(0);
+                    }
+                }
+                //BlackVersion
+            } else if (myColor == ChessGame.TeamColor.BLACK) {
+
+            }
+
+        }
         return pawnMoves;
     }
 
@@ -92,7 +148,7 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()+1,pos.getColumn());
+            pos = new ChessPosition(pos.getRow() + 1, pos.getColumn());
         }
 
         //checks backward
@@ -107,11 +163,11 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()-1,pos.getColumn());
+            pos = new ChessPosition(pos.getRow() - 1, pos.getColumn());
         }
 
         //checks left
-        pos = new ChessPosition(myRow, myCol-1);
+        pos = new ChessPosition(myRow, myCol - 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -122,11 +178,11 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow(),pos.getColumn()-1);
+            pos = new ChessPosition(pos.getRow(), pos.getColumn() - 1);
         }
 
         //checks right
-        pos = new ChessPosition(myRow, myCol+1);
+        pos = new ChessPosition(myRow, myCol + 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -137,7 +193,7 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow(),pos.getColumn()+1);
+            pos = new ChessPosition(pos.getRow(), pos.getColumn() + 1);
         }
 
 
@@ -152,14 +208,14 @@ public class ChessPiece {
 
         //Adds possible moves to possibleMoves
         Vector<ChessPosition> possibleMoves = new Vector<>();
-        possibleMoves.add(new ChessPosition(myRow+1,myCol+2));
-        possibleMoves.add(new ChessPosition(myRow+1,myCol-2));
-        possibleMoves.add(new ChessPosition(myRow+2,myCol-1));
-        possibleMoves.add(new ChessPosition(myRow+2,myCol+1));
-        possibleMoves.add(new ChessPosition(myRow-1,myCol+2));
-        possibleMoves.add(new ChessPosition(myRow-1,myCol-2));
-        possibleMoves.add(new ChessPosition(myRow-2,myCol+1));
-        possibleMoves.add(new ChessPosition(myRow-2,myCol-1));
+        possibleMoves.add(new ChessPosition(myRow + 1, myCol + 2));
+        possibleMoves.add(new ChessPosition(myRow + 1, myCol - 2));
+        possibleMoves.add(new ChessPosition(myRow + 2, myCol - 1));
+        possibleMoves.add(new ChessPosition(myRow + 2, myCol + 1));
+        possibleMoves.add(new ChessPosition(myRow - 1, myCol + 2));
+        possibleMoves.add(new ChessPosition(myRow - 1, myCol - 2));
+        possibleMoves.add(new ChessPosition(myRow - 2, myCol + 1));
+        possibleMoves.add(new ChessPosition(myRow - 2, myCol - 1));
 
         //Determines if possibleMoves belong in knightMoves
         while (!possibleMoves.isEmpty()) {
@@ -192,7 +248,7 @@ public class ChessPiece {
 
 
         //checks NW
-        ChessPosition pos = new ChessPosition(myRow+1, myCol+1);
+        ChessPosition pos = new ChessPosition(myRow + 1, myCol + 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -203,11 +259,11 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()+1,pos.getColumn()+1);
+            pos = new ChessPosition(pos.getRow() + 1, pos.getColumn() + 1);
         }
 
         //checks NE
-        pos = new ChessPosition(myRow+1, myCol-1);
+        pos = new ChessPosition(myRow + 1, myCol - 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -218,11 +274,11 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()+1,pos.getColumn()-1);
+            pos = new ChessPosition(pos.getRow() + 1, pos.getColumn() - 1);
         }
 
         //checks SW
-        pos = new ChessPosition(myRow-1, myCol-1);
+        pos = new ChessPosition(myRow - 1, myCol - 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -233,11 +289,11 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()-1,pos.getColumn()-1);
+            pos = new ChessPosition(pos.getRow() - 1, pos.getColumn() - 1);
         }
 
         //checks SE
-        pos = new ChessPosition(myRow-1, myCol+1);
+        pos = new ChessPosition(myRow - 1, myCol + 1);
         while (isOnBoard(pos)) {
             ChessMove posMove = new ChessMove(myPosition, pos, null);
             if (isClear(board, pos)) {
@@ -248,7 +304,7 @@ public class ChessPiece {
             } else {
                 break;
             }
-            pos = new ChessPosition(pos.getRow()-1,pos.getColumn()+1);
+            pos = new ChessPosition(pos.getRow() - 1, pos.getColumn() + 1);
         }
 
         return bishopMoves;
