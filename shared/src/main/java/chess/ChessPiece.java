@@ -93,40 +93,39 @@ public class ChessPiece {
                     board.getPiece(rightCapture).getTeamColor() != myColor) {
                 possibleMoves.add(rightCapture);
             }
+        }
 
 
-            //White version of possibleMoves resolver
-            //PromotionMoves First
-            if (myColor == ChessGame.TeamColor.WHITE) {
-                while (!possibleMoves.isEmpty()) {
-                    ChessPosition pos = possibleMoves.firstElement();
-                    if(!isOnBoard(pos)){
-                        possibleMoves.remove(0);
-                    }
-                    if (possibleMoves.firstElement().getRow() == 8) {
-                        ChessMove rookPromo = new ChessMove(myPosition, pos, PieceType.ROOK);
-                        ChessMove knightPromo = new ChessMove(myPosition, pos, PieceType.KNIGHT);
-                        ChessMove bishopPromo = new ChessMove(myPosition, pos, PieceType.BISHOP);
-                        ChessMove queenPromo = new ChessMove(myPosition, pos, PieceType.QUEEN);
-                        pawnMoves.add(rookPromo);
-                        pawnMoves.add(knightPromo);
-                        pawnMoves.add(bishopPromo);
-                        pawnMoves.add(queenPromo);
-                        possibleMoves.remove(0);
-                    }
+        //White version of possibleMoves resolver
+        //PromotionMoves First
 
-                    // White nonPromotion moves
-                    else{
-                        pawnMoves.add(new ChessMove(myPosition,pos,null));
-                        possibleMoves.remove(0);
-                    }
-                }
-                //BlackVersion
-            } else if (myColor == ChessGame.TeamColor.BLACK) {
-
+        while (!possibleMoves.isEmpty()) {
+            ChessPosition pos = possibleMoves.firstElement();
+            if (!isOnBoard(pos)) {
+                possibleMoves.remove(0);
             }
 
+            if (myColor == ChessGame.TeamColor.WHITE && pos.getRow() == 8 ||
+                    myColor == ChessGame.TeamColor.BLACK && pos.getRow() == 1) {
+                ChessMove rookPromo = new ChessMove(myPosition, pos, PieceType.ROOK);
+                ChessMove knightPromo = new ChessMove(myPosition, pos, PieceType.KNIGHT);
+                ChessMove bishopPromo = new ChessMove(myPosition, pos, PieceType.BISHOP);
+                ChessMove queenPromo = new ChessMove(myPosition, pos, PieceType.QUEEN);
+                pawnMoves.add(rookPromo);
+                pawnMoves.add(knightPromo);
+                pawnMoves.add(bishopPromo);
+                pawnMoves.add(queenPromo);
+                possibleMoves.remove(0);
+            }
+
+            // White nonPromotion moves
+            else {
+                pawnMoves.add(new ChessMove(myPosition, pos, null));
+                possibleMoves.remove(0);
+            }
         }
+
+
         return pawnMoves;
     }
 
