@@ -70,23 +70,30 @@ public class ChessPiece {
     }
 
     private Collection<ChessMove> getRookMoves(ChessBoard board, ChessPosition myPosition) {
-        return null;
+        Collection<ChessMove> rookMoves = new ArrayList<>();
+        return rookMoves;
     }
 
     private Collection<ChessMove> getKnightMoves(ChessBoard board, ChessPosition myPosition) {
-        return null;
+        Collection<ChessMove> knightMoves = new ArrayList<>();
+        return knightMoves;
     }
 
     private Collection<ChessMove> getBishopMoves(ChessBoard board, ChessPosition myPosition) {
-        return null;
+        Collection<ChessMove> bishopMoves = new ArrayList<>();
+        return bishopMoves;
     }
 
     private Collection<ChessMove> getQueenMoves(ChessBoard board, ChessPosition myPosition) {
-        return null;
+        Collection<ChessMove> queenMoves = new ArrayList<>();
+        queenMoves.addAll(getRookMoves(board, myPosition));
+        queenMoves.addAll(getBishopMoves(board,myPosition));
+        return queenMoves;
     }
 
     private Collection<ChessMove> getKingMoves(ChessBoard board, ChessPosition myPosition) {
-        return null;
+        Collection<ChessMove> kingMoves = new ArrayList<>();
+        return kingMoves;
     }
 
     @Override
