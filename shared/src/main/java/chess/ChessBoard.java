@@ -43,7 +43,16 @@ public class ChessBoard {
         resetFrontRanks();
         resetBackRanks();
     }
-
+    public ChessBoard cloneBoard(){
+        ChessBoard newBoard = new ChessBoard();
+        for(int r=1;r<=8;r++){
+            for (int c=1;c<=8;c++){
+                ChessPosition pos = new ChessPosition(r,c);
+                newBoard.addPiece(pos,getPiece(pos));
+            }
+        }
+        return newBoard;
+    }
     private void resetFrontRanks(){
         for (int c=1;c<=8;c++){
             addPiece(new ChessPosition(2,c),new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN));
