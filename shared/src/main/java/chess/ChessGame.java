@@ -99,6 +99,9 @@ public class ChessGame {
             if (board.getPiece(start).getTeamColor() != teamTurn) {
                 throw new InvalidMoveException();
             }
+            if (validMoves == null || !validMoves.contains(move)) {
+                throw new InvalidMoveException();
+            }
 
             //move must be valid
             if (validMoves.contains(move)) {
@@ -114,12 +117,10 @@ public class ChessGame {
                 board.addPiece(move.getEndPosition(), piece);
                 switchTeamTurn();
             }
-            else {
-                // If move not in ValidMoves or getPiece(start) is null
-                throw new InvalidMoveException();
-            }
         }
-
+        else{
+            throw new InvalidMoveException();
+        }
     }
 
     /**
