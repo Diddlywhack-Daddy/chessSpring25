@@ -141,7 +141,7 @@ public class ChessGame {
             opponentColor = TeamColor.WHITE;
         }
 
-        Collection<ChessMove> opponentMoves = possibleMoves(opponentColor);
+        Collection<ChessMove> opponentMoves = possibleMovesHelper(testboard,opponentColor);
         for (ChessMove move : opponentMoves) {
             ChessPosition endPosition = move.getEndPosition();
             if (testboard.getPiece(endPosition) != null && testboard.getPiece(endPosition).getTeamColor() == myColor &&
@@ -162,14 +162,17 @@ public class ChessGame {
      * the a collection of all possible piecemoves for the specified color.
      **/
     private Collection<ChessMove> possibleMoves(TeamColor color) {
+        return possibleMovesHelper(board,color);
+    }
+
+    private Collection<ChessMove> possibleMovesHelper(ChessBoard testBoard, TeamColor color){
         Collection<ChessMove> possibleMoves = new ArrayList<>();
         for (int r = 1; r <= 8; r++) {
             for (int c = 1; c <= 8; c++) {
                 ChessPosition boardSquare = new ChessPosition(r, c);
-                if (board.getPiece(boardSquare) != null &&
-                        board.getPiece(boardSquare).getTeamColor() == color) {
-                    //TODO: WHY DOESN'T VALIDMOVES WORK HERE?
-                    possibleMoves.addAll(board.getPiece(boardSquare).pieceMoves(board, boardSquare));
+                if (testBoard.getPiece(boardSquare) != null &&
+                        testBoard.getPiece(boardSquare).getTeamColor() == color) {
+                    possibleMoves.addAll(testBoard.getPiece(boardSquare).pieceMoves(testBoard, boardSquare));
                 }
             }
         }

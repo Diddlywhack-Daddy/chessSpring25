@@ -48,7 +48,13 @@ public class ChessBoard {
         for(int r=1;r<=8;r++){
             for (int c=1;c<=8;c++){
                 ChessPosition pos = new ChessPosition(r,c);
-                newBoard.addPiece(pos,getPiece(pos));
+                ChessPiece piece = getPiece(pos);
+                if(piece!=null){
+                    newBoard.addPiece(pos,new ChessPiece(piece.getTeamColor(),piece.getPieceType()));
+                }
+                else {
+                    newBoard.addPiece(pos, null);
+                }
             }
         }
         return newBoard;
