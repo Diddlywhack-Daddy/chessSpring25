@@ -114,11 +114,12 @@ public class ChessGame {
                 board.addPiece(move.getEndPosition(), piece);
                 switchTeamTurn();
             }
+            else {
+                // If move not in ValidMoves or getPiece(start) is null
+                throw new InvalidMoveException();
+            }
         }
-        // If move not in ValidMoves or getPiece(start) is null
-        else {
-            throw new InvalidMoveException();
-        }
+
     }
 
     /**
@@ -131,7 +132,7 @@ public class ChessGame {
         return isInCheckTester(board, teamColor);
     }
 
-    private Boolean isInCheckTester(ChessBoard board, TeamColor myColor) {
+    private Boolean isInCheckTester(ChessBoard testboard, TeamColor myColor) {
         ChessGame.TeamColor opponentColor;
         if (myColor == TeamColor.WHITE) {
             opponentColor = TeamColor.BLACK;
@@ -142,13 +143,15 @@ public class ChessGame {
         Collection<ChessMove> opponentMoves = possibleMoves(opponentColor);
         for (ChessMove move : opponentMoves) {
             ChessPosition endPosition = move.getEndPosition();
-            if (board.getPiece(endPosition) != null && board.getPiece(endPosition).getTeamColor() == myColor &&
-                    board.getPiece(endPosition).getPieceType() == ChessPiece.PieceType.KING) {
+            if (testboard.getPiece(endPosition) != null && testboard.getPiece(endPosition).getTeamColor() == myColor &&
+                    testboard.getPiece(endPosition).getPieceType() == ChessPiece.PieceType.KING) {
                 return true;
             }
         }
         return false;
     }
+
+
 
 
     /**
