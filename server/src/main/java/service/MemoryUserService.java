@@ -2,10 +2,7 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthData;
-import model.AuthResult;
-import model.RegisterRequest;
-import model.UserData;
+import model.*;
 
 import java.util.UUID;
 
@@ -33,9 +30,23 @@ public class MemoryUserService implements UserService {
     }
 
     @Override
-    public AuthResult login(model.LoginRequest request) throws DataAccessException {
-        throw new UnsupportedOperationException("Login not yet implemented");
+    public AuthResult login(LoginRequest request) throws DataAccessException {
+        if (request.username() == null || request.password() == null) {
+            throw new IllegalArgumentException("Missing username or password");
+        }
+
+        UserData user = data.getUser(request.username());
+        if (user == null || !user.password().equals(request.password())) {
+            throw new dataaccess.DataAccessException("Invalid credentials");
+        }
+
+        String token = UUID.randomUUID().toString();
+        AuthData auth = new AuthData(token, request.username());
+        data.createAuth(auth);
+
+        return new AuthResult(request.username(), token);
     }
+
 
     @Override
     public model.BasicResult logout(String authToken) throws DataAccessException {
