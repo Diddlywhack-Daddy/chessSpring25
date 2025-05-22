@@ -28,7 +28,6 @@ public class MemoryUserService implements UserService {
 
         return new AuthResult(request.username(), token);
     }
-
     @Override
     public AuthResult login(LoginRequest request) throws DataAccessException {
         if (request.username() == null || request.password() == null) {
@@ -37,15 +36,15 @@ public class MemoryUserService implements UserService {
 
         UserData user = data.getUser(request.username());
         if (user == null || !user.password().equals(request.password())) {
-            throw new dataaccess.DataAccessException("Invalid credentials");
+            throw new DataAccessException("Invalid credentials");
         }
-
         String token = UUID.randomUUID().toString();
-        AuthData auth = new AuthData(token, request.username());
+        AuthData auth = new AuthData(token, user.username());
         data.createAuth(auth);
 
-        return new AuthResult(request.username(), token);
+        return new AuthResult(user.username(), token);
     }
+
 
 
     @Override

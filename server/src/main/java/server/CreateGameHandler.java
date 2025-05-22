@@ -22,6 +22,11 @@ public class CreateGameHandler implements Route {
             String authToken = req.headers("Authorization");
             CreateGameRequest request = gson.fromJson(req.body(), CreateGameRequest.class);
 
+            if (request == null || request.gameName() == null || request.gameName().isBlank()) {
+                res.status(400);
+                return gson.toJson(Map.of("message", "Error: Missing game name"));
+            }
+
             CreateGameResult result = service.createGame(request, authToken);
             res.status(200);
             res.type("application/json");
@@ -35,4 +40,5 @@ public class CreateGameHandler implements Route {
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
+
 }

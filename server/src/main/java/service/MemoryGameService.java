@@ -51,9 +51,41 @@ public class MemoryGameService implements GameService {
         return new ListGamesResult(infoList);
     }
 
-
     @Override
     public BasicResult joinGame(JoinGameRequest request, String authToken) throws DataAccessException {
-        return null;
+        if (authToken == null || request.playerColor() == null) {
+            throw new IllegalArgumentException("Missing auth or color");
+        }
+
+        AuthData auth = data.getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("Unauthorized");
+        }
+
+        GameData game = data.getGame(request.gameID());
+        if (game == null) {
+            return new BasicResult(false, "Error: game not found");
+        }
+
+        String username = auth.username();
+        String color = request.playerColor().toLowerCase();
+
+        if (color.equals("white")) {
+            if (game.whiteUsername() != null) {
+                return new BasicResult(false, "Error: white player already assigned");
+            }
+            game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+        } else if (color.equals("black")) {
+            if (game.blackUsername() != null) {
+                return new BasicResult(false, "Error: black player already assigned");
+            }
+            game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+        } else if (!color.equals("observe")) {
+            return new BasicResult(false, "Error: invalid color");
+        }
+
+        data.updateGame(game);
+        return new BasicResult(true, null);
     }
+
 }
