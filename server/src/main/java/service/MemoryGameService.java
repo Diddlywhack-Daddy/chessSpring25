@@ -4,6 +4,8 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MemoryGameService implements GameService {
@@ -30,8 +32,25 @@ public class MemoryGameService implements GameService {
 
     @Override
     public ListGamesResult listGames(String authToken) throws DataAccessException {
-        return null;
+        if (authToken == null || data.getAuth(authToken) == null) {
+            throw new dataaccess.DataAccessException("Unauthorized");
+        }
+
+        GameData[] games = data.listGames();
+        List<ListGamesResult.GameInfo> infoList = new ArrayList<>();
+
+        for (GameData game : games) {
+            infoList.add(new ListGamesResult.GameInfo(
+                    game.gameID(),
+                    game.whiteUsername(),
+                    game.blackUsername(),
+                    game.gameName()
+            ));
+        }
+
+        return new ListGamesResult(infoList);
     }
+
 
     @Override
     public BasicResult joinGame(JoinGameRequest request, String authToken) throws DataAccessException {
