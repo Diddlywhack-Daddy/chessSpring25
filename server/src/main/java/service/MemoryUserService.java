@@ -49,7 +49,13 @@ public class MemoryUserService implements UserService {
 
 
     @Override
-    public model.BasicResult logout(String authToken) throws DataAccessException {
-        throw new UnsupportedOperationException("Logout not yet implemented");
+    public BasicResult logout(String authToken) throws DataAccessException {
+        if (authToken == null || data.getAuth(authToken) == null) {
+            throw new dataaccess.DataAccessException("Invalid token");
+        }
+
+        data.deleteAuth(authToken);
+        return new BasicResult(true, null);
     }
+
 }
