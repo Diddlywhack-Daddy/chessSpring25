@@ -3,10 +3,8 @@ package server;
 import spark.*;
 import spark.Spark.*;
 
-import static com.sun.tools.jdeprscan.Messages.get;
 import static javax.swing.UIManager.put;
-import static spark.Spark.delete;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class Server {
 
