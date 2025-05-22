@@ -1,9 +1,6 @@
 package server;
 
 import spark.*;
-import spark.Spark.*;
-
-import static javax.swing.UIManager.put;
 import static spark.Spark.*;
 
 public class Server {

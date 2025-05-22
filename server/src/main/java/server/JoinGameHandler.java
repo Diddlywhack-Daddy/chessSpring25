@@ -1,8 +1,8 @@
 package server;
 
 import com.google.gson.Gson;
+import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
-import model.BasicResult;
 import model.JoinGameRequest;
 import service.GameService;
 import service.MemoryGameService;
@@ -19,21 +19,36 @@ public class JoinGameHandler implements Route {
     @Override
     public Object handle(Request req, Response res) {
         try {
-            System.out.println("JoinGame endpoint hit");
-
             String authToken = req.headers("Authorization");
-            JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
-
-            BasicResult result = service.joinGame(request, authToken);
-
-            if (result.success()) {
-                res.status(200);
-                return "{}";
-            } else {
-                res.status(403);
-                return gson.toJson(Map.of("message", result.message()));
+            if (authToken == null || authToken.isBlank()) {
+                res.status(401);
+                return gson.toJson(Map.of("message", "Error: unauthorized"));
             }
 
+            JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
+
+            if (request == null || request.gameID() <= 0) {
+                res.status(400);
+                return gson.toJson(Map.of("message", "Error: Invalid game ID"));
+            }
+
+            String playerColor = request.playerColor();
+            if (playerColor != null &&
+                    !playerColor.equalsIgnoreCase("WHITE") &&
+                    !playerColor.equalsIgnoreCase("BLACK")) {
+                res.status(400);
+                return gson.toJson(Map.of("message", "Error: Invalid player color"));
+            }
+
+            service.joinGame(request, authToken);
+
+            res.status(200);
+            res.type("application/json");
+            return "{}";
+
+        } catch (DataAccessException e) {
+            res.status(401);
+            return gson.toJson(Map.of("message", "Error: unauthorized"));
         } catch (Exception e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
