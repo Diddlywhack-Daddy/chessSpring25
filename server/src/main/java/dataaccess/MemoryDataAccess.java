@@ -7,8 +7,11 @@ import model.GameData;
 import java.util.*;
 
 public class MemoryDataAccess implements DataAccess {
-    private static final MemoryDataAccess chessData = new MemoryDataAccess();
-    public static MemoryDataAccess getInstance() { return chessData; }
+    private static final MemoryDataAccess CHESS_DATA = new MemoryDataAccess();
+
+    public static MemoryDataAccess getInstance() {
+        return CHESS_DATA;
+    }
 
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthData> authTokens = new HashMap<>();
@@ -25,7 +28,9 @@ public class MemoryDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        if (users.containsKey(user.username())) throw new DataAccessException("Username already exists");
+        if (users.containsKey(user.username())) {
+            throw new DataAccessException("Username already exists");
+        }
         users.put(user.username(), user);
     }
 
