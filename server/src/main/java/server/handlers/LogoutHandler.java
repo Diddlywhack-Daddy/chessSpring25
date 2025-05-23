@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.BasicResult;
-import service.memoryimplementation.UserService;
+import service.UserService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

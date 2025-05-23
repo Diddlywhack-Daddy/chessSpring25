@@ -5,7 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.AuthResult;
 import model.LoginRequest;
-import service.memoryimplementation.UserService;
+import service.UserService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

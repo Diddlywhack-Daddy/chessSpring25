@@ -6,9 +6,6 @@ import model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import service.memoryimplementation.ClearService;
-import service.memoryimplementation.GameService;
-import service.memoryimplementation.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
 

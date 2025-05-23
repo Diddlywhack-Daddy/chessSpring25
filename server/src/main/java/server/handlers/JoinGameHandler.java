@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.JoinGameRequest;
-import service.memoryimplementation.GameService;
+import service.GameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
