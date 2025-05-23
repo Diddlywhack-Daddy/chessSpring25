@@ -1,13 +1,12 @@
-package service.memoryImplementation;
+package service.memoryimplementation;
 
 import dataaccess.DataAccess;
 import model.BasicResult;
-import service.interfaces.ClearService;
 
-public class MemoryClearService implements ClearService {
+public class ClearService implements service.interfaces.ClearService {
     private final DataAccess data;
 
-    public MemoryClearService(DataAccess dataAccess){
+    public ClearService(DataAccess dataAccess){
         this.data = dataAccess;
     }
 

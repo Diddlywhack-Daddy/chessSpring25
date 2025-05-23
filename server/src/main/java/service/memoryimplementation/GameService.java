@@ -1,19 +1,18 @@
-package service.memoryImplementation;
+package service.memoryimplementation;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
-import service.interfaces.GameService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MemoryGameService implements GameService {
+public class GameService implements service.interfaces.GameService {
     private final DataAccess data;
     private final AtomicInteger idCounter = new AtomicInteger(1);
 
-    public MemoryGameService(DataAccess dataAccess) {
+    public GameService(DataAccess dataAccess) {
         this.data = dataAccess;
     }
     @Override

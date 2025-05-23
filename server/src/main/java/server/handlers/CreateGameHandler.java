@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
 import model.CreateGameRequest;
 import model.CreateGameResult;
-import service.interfaces.GameService;
-import service.memoryImplementation.MemoryGameService;
+import service.memoryimplementation.GameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 public class CreateGameHandler implements Route {
     private final Gson gson = new Gson();
-    private final GameService service = new MemoryGameService(MemoryDataAccess.getInstance());
+    private final service.interfaces.GameService service = new GameService(MemoryDataAccess.getInstance());
 
     @Override
     public Object handle(Request req, Response res) {

@@ -7,8 +7,8 @@ import model.GameData;
 import java.util.*;
 
 public class MemoryDataAccess implements DataAccess {
-    private static final MemoryDataAccess instance = new MemoryDataAccess();
-    public static MemoryDataAccess getInstance() { return instance; }
+    private static final MemoryDataAccess chessData = new MemoryDataAccess();
+    public static MemoryDataAccess getInstance() { return chessData; }
 
     private final Map<String, UserData> users = new HashMap<>();
     private final Map<String, AuthData> authTokens = new HashMap<>();

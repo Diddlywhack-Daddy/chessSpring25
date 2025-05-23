@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
 import model.AuthResult;
 import model.RegisterRequest;
-import service.memoryImplementation.MemoryUserService;
-import service.interfaces.UserService;
+import service.memoryimplementation.UserService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 public class RegisterHandler implements Route {
     private final Gson gson = new Gson();
-    private final UserService service = new MemoryUserService(MemoryDataAccess.getInstance());
+    private final service.interfaces.UserService service = new UserService(MemoryDataAccess.getInstance());
 
     @Override
     public Object handle(Request req, Response res) {

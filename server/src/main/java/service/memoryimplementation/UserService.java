@@ -1,16 +1,15 @@
-package service.memoryImplementation;
+package service.memoryimplementation;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
-import service.interfaces.UserService;
 
 import java.util.UUID;
 
-public class MemoryUserService implements UserService {
+public class UserService implements service.interfaces.UserService {
     private final DataAccess data;
 
-    public MemoryUserService(DataAccess dataAccess) {
+    public UserService(DataAccess dataAccess) {
         this.data = dataAccess;
     }
 
