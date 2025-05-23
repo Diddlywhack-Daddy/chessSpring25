@@ -19,14 +19,14 @@ public class ServiceTests {
     static UserService userService;
 
 
-    static MemoryDataAccess ChessData;
+    static MemoryDataAccess chessData;
 
     @BeforeAll
     public static void init() {
-        ChessData = new MemoryDataAccess();
-        clearService = new ClearService(ChessData);
-        gameService = new GameService(ChessData);
-        userService = new UserService(ChessData);
+        chessData = new MemoryDataAccess();
+        clearService = new ClearService(chessData);
+        gameService = new GameService(chessData);
+        userService = new UserService(chessData);
     }
 
     @AfterEach
@@ -45,14 +45,14 @@ public class ServiceTests {
         }
 
         clearService.clear();
-        assert ChessData.getUsers().isEmpty();
-        assert ChessData.getGames().isEmpty();
-        assert ChessData.getAuthData().isEmpty();
+        assert chessData.getUsers().isEmpty();
+        assert chessData.getGames().isEmpty();
+        assert chessData.getAuthData().isEmpty();
     }
 
 
     @Test
-    public void register_success() {
+    public void registerSuccess() {
         RegisterRequest request = new RegisterRequest("alice", "pass", "a@b.com");
         try {
             AuthResult auth = userService.register(request);
@@ -60,7 +60,7 @@ public class ServiceTests {
             assertNotNull(auth);
             assertEquals("alice", auth.username());
 
-            UserData storedUser = ChessData.getUser("alice");
+            UserData storedUser = chessData.getUser("alice");
             assertNotNull(storedUser);
             assertEquals("pass", storedUser.password());
             assertEquals("a@b.com", storedUser.email());
@@ -70,7 +70,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void register_fail() {
+    public void registerFail() {
         RegisterRequest request = new RegisterRequest("alice", "pass", "a@b.com");
         try {
             AuthResult auth = userService.register(request);
@@ -87,7 +87,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void login_success() {
+    public void loginSuccess() {
         try {
             RegisterRequest request = new RegisterRequest("bob", "hunter2", "bob@example.com");
             userService.register(request);
@@ -96,14 +96,14 @@ public class ServiceTests {
 
             assertNotNull(auth);
             assertEquals("bob", auth.username());
-            assertNotNull(ChessData.getAuth(auth.authToken()));
+            assertNotNull(chessData.getAuth(auth.authToken()));
         } catch (DataAccessException e) {
             fail("Login should succeed with correct credentials.");
         }
     }
 
     @Test
-    public void login_fail() {
+    public void loginFail() {
         try {
             RegisterRequest request = new RegisterRequest("carol", "password", "carol@example.com");
             userService.register(request);
@@ -116,21 +116,21 @@ public class ServiceTests {
     }
 
     @Test
-    public void logout_success() {
+    public void logoutSuccess() {
         try {
             RegisterRequest request = new RegisterRequest("dave", "securepass", "dave@example.com");
             AuthResult auth = userService.register(request);
 
             userService.logout(auth.authToken());
 
-            assertNull(ChessData.getAuth(auth.authToken()));
+            assertNull(chessData.getAuth(auth.authToken()));
         } catch (DataAccessException e) {
             fail("Logout should succeed with valid token.");
         }
     }
 
     @Test
-    public void logout_fail() {
+    public void logoutFail() {
         try {
             userService.logout("invalidToken");
             fail("Expected DataAccessException due to invalid token.");
@@ -140,7 +140,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void createGame_success() {
+    public void createGameSuccess() {
         try {
             RegisterRequest request = new RegisterRequest("eve", "123456", "eve@example.com");
             AuthResult auth = userService.register(request);
@@ -149,14 +149,14 @@ public class ServiceTests {
             CreateGameResult result = gameService.createGame(gameRequest, auth.authToken());
 
             assertTrue(result.gameID() > 0);
-            assertNotNull(ChessData.getGame(result.gameID()));
+            assertNotNull(chessData.getGame(result.gameID()));
         } catch (DataAccessException e) {
             fail("Game creation should succeed with valid token.");
         }
     }
 
     @Test
-    public void createGame_fail() {
+    public void createGameFail() {
         try {
             CreateGameRequest gameRequest = new CreateGameRequest("NoAuth Game");
             gameService.createGame(gameRequest, "badAuthToken");
@@ -167,7 +167,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void listGames_success() {
+    public void listGamesSuccess() {
         try {
             RegisterRequest request = new RegisterRequest("frank", "pass123", "frank@example.com");
             AuthResult auth = userService.register(request);
@@ -183,7 +183,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void listGames_fail() {
+    public void listGamesFail() {
         try {
             gameService.listGames("fakeToken");
             fail("Expected DataAccessException due to invalid auth token.");
@@ -193,7 +193,7 @@ public class ServiceTests {
     }
 
     @Test
-    public void joinGame_success() {
+    public void joinGameSuccess() {
         try {
             RegisterRequest request = new RegisterRequest("george", "pw", "george@example.com");
             AuthResult auth = userService.register(request);
@@ -203,14 +203,14 @@ public class ServiceTests {
             JoinGameRequest joinRequest = new JoinGameRequest("WHITE", game.gameID());
             gameService.joinGame(joinRequest, auth.authToken());
 
-            assertEquals("george", ChessData.getGame(game.gameID()).whiteUsername());
+            assertEquals("george", chessData.getGame(game.gameID()).whiteUsername());
         } catch (DataAccessException e) {
             fail("Join game should succeed with valid auth and color.");
         }
     }
 
     @Test
-    public void joinGame_fail() {
+    public void joinGameFail() {
         try {
             RegisterRequest request = new RegisterRequest("harry", "pw", "harry@example.com");
             AuthResult auth = userService.register(request);
