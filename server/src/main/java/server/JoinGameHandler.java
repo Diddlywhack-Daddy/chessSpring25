@@ -34,8 +34,8 @@ public class JoinGameHandler implements Route {
 
             String playerColor = request.playerColor();
             if (playerColor != null &&
-                    !playerColor.equalsIgnoreCase("WHITE") &&
-                    !playerColor.equalsIgnoreCase("BLACK")) {
+                    !playerColor.equals("WHITE") &&
+                    !playerColor.equals("BLACK")) {
                 res.status(400);
                 return gson.toJson(Map.of("message", "Error: Invalid player color"));
             }
@@ -47,11 +47,23 @@ public class JoinGameHandler implements Route {
             return "{}";
 
         } catch (DataAccessException e) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
+            // Determine status based on exception message
+            String message = e.getMessage().toLowerCase();
+            if (message.contains("unauthorized")) {
+                res.status(401);
+            } else if (message.contains("already taken") || message.contains("forbidden")) {
+                res.status(403);
+            } else if (message.contains("bad request") || message.contains("invalid")) {
+                res.status(400);
+            } else {
+                res.status(500);
+            }
+
+            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         } catch (Exception e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
+
 }
