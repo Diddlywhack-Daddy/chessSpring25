@@ -1,16 +1,18 @@
-package server;
+package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
-import service.GameService;
-import service.MemoryGameService;
+import model.CreateGameRequest;
+import model.CreateGameResult;
+import service.interfaces.GameService;
+import service.memoryImplementation.MemoryGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
 import java.util.Map;
 
-public class ListGamesHandler implements Route {
+public class CreateGameHandler implements Route {
     private final Gson gson = new Gson();
     private final GameService service = new MemoryGameService(MemoryDataAccess.getInstance());
 
@@ -18,10 +20,18 @@ public class ListGamesHandler implements Route {
     public Object handle(Request req, Response res) {
         try {
             String authToken = req.headers("Authorization");
-            var result = service.listGames(authToken);
+            CreateGameRequest request = gson.fromJson(req.body(), CreateGameRequest.class);
+
+            if (request == null || request.gameName() == null || request.gameName().isBlank()) {
+                res.status(400);
+                return gson.toJson(Map.of("message", "Error: bad request"));
+            }
+
+            CreateGameResult result = service.createGame(request, authToken);
             res.status(200);
             res.type("application/json");
             return gson.toJson(result);
+
         } catch (dataaccess.DataAccessException e) {
             res.status(401);
             return gson.toJson(Map.of("message", "Error: unauthorized"));
@@ -30,4 +40,5 @@ public class ListGamesHandler implements Route {
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
+
 }

@@ -1,10 +1,10 @@
-package server;
+package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
 import model.BasicResult;
-import service.ClearService;
-import service.MemoryClearService;
+import service.interfaces.ClearService;
+import service.memoryImplementation.MemoryClearService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

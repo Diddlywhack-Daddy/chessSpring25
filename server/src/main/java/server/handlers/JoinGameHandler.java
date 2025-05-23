@@ -1,11 +1,11 @@
-package server;
+package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.JoinGameRequest;
-import service.GameService;
-import service.MemoryGameService;
+import service.interfaces.GameService;
+import service.memoryImplementation.MemoryGameService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

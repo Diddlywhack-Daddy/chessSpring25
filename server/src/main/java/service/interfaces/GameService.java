@@ -1,4 +1,4 @@
-package service;
+package service.interfaces;
 
 import dataaccess.DataAccessException;
 import model.BasicResult;

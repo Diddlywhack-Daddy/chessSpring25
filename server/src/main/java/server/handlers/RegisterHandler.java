@@ -1,11 +1,11 @@
-package server;
+package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.MemoryDataAccess;
 import model.AuthResult;
 import model.RegisterRequest;
-import service.MemoryUserService;
-import service.UserService;
+import service.memoryImplementation.MemoryUserService;
+import service.interfaces.UserService;
 import spark.Request;
 import spark.Response;
 import spark.Route;

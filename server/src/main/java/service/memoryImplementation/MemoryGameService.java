@@ -1,8 +1,9 @@
-package service;
+package service.memoryImplementation;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
+import service.interfaces.GameService;
 
 import java.util.ArrayList;
 import java.util.List;
