@@ -18,6 +18,18 @@ public class MemoryDataAccess implements DataAccess {
     private final Map<Integer, GameData> games = new HashMap<>();
     private int nextGameID = 1;
 
+    public Map<String, UserData> getUsers() {
+        return users;
+    }
+
+    public Map<String, AuthData> getAuthData() {
+        return authTokens;
+    }
+
+    public Map<Integer, GameData> getGames() {
+        return games;
+    }
+
     @Override
     public void clear() {
         users.clear();
