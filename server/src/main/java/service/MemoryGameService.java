@@ -54,7 +54,7 @@ public class MemoryGameService implements GameService {
     @Override
     public BasicResult joinGame(JoinGameRequest request, String authToken) throws DataAccessException {
         if (authToken == null || request.playerColor() == null) {
-            throw new IllegalArgumentException("Missing auth or color");
+            throw new DataAccessException("Missing auth or color");
         }
 
         AuthData auth = data.getAuth(authToken);
@@ -64,28 +64,36 @@ public class MemoryGameService implements GameService {
 
         GameData game = data.getGame(request.gameID());
         if (game == null) {
-            return new BasicResult(false, "Error: game not found");
+            throw new DataAccessException("Invalid game ID");
         }
 
         String username = auth.username();
-        String color = request.playerColor().toLowerCase();
+        String color = request.playerColor();
 
-        if (color.equals("white")) {
-            if (game.whiteUsername() != null) {
-                return new BasicResult(false, "Error: white player already assigned");
-            }
-            game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
-        } else if (color.equals("black")) {
-            if (game.blackUsername() != null) {
-                return new BasicResult(false, "Error: black player already assigned");
-            }
-            game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
-        } else if (!color.equals("observe")) {
-            return new BasicResult(false, "Error: invalid color");
+        switch (color) {
+            case "WHITE":
+                if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
+                    throw new DataAccessException("Color already taken");
+                }
+                game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+                break;
+
+            case "BLACK":
+                if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
+                    throw new DataAccessException("Color already taken");
+                }
+                game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+                break;
+
+
+            default:
+                throw new DataAccessException("Invalid player color");
         }
 
         data.updateGame(game);
         return new BasicResult(true, null);
     }
+
+
 
 }

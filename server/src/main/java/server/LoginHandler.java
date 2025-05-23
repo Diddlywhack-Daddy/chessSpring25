@@ -20,7 +20,7 @@ public class LoginHandler implements Route {
     @Override
     public Object handle(Request req, Response res) {
         try {
-            System.out.println("Login endpoint hit");
+            //System.out.println("Login endpoint hit");
 
             LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
             AuthResult result = service.login(request);

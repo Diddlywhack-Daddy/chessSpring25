@@ -24,7 +24,7 @@ public class CreateGameHandler implements Route {
 
             if (request == null || request.gameName() == null || request.gameName().isBlank()) {
                 res.status(400);
-                return gson.toJson(Map.of("message", "Error: Missing game name"));
+                return gson.toJson(Map.of("message", "Error: bad request"));
             }
 
             CreateGameResult result = service.createGame(request, authToken);

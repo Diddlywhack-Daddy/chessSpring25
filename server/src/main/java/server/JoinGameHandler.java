@@ -47,13 +47,12 @@ public class JoinGameHandler implements Route {
             return "{}";
 
         } catch (DataAccessException e) {
-            // Determine status based on exception message
             String message = e.getMessage().toLowerCase();
             if (message.contains("unauthorized")) {
                 res.status(401);
             } else if (message.contains("already taken") || message.contains("forbidden")) {
                 res.status(403);
-            } else if (message.contains("bad request") || message.contains("invalid")) {
+            } else if (message.contains("bad request") || message.contains("invalid") || message.contains("missing")) {
                 res.status(400);
             } else {
                 res.status(500);

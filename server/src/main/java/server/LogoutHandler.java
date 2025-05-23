@@ -19,7 +19,7 @@ public class LogoutHandler implements Route {
     @Override
     public Object handle(Request req, Response res) {
         try {
-            System.out.println("Logout endpoint hit");
+            //System.out.println("Logout endpoint hit");
 
             String authToken = req.headers("Authorization");
             BasicResult result = service.logout(authToken);

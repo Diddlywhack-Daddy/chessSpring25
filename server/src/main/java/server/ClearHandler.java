@@ -20,7 +20,7 @@ public class ClearHandler implements Route {
         BasicResult result = service.clear();
         if (result.success()) {
             res.status(200);
-            System.out.println("Clear endpoint hit");
+            //System.out.println("Clear endpoint hit");
             return "{}";
         } else {
             res.status(500);
