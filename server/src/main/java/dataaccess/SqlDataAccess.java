@@ -4,7 +4,48 @@ import model.AuthData;
 import model.GameData;
 import model.UserData;
 
-public class SqlDataAccess implements DataAccess{
+import java.sql.*;
+
+
+public class SqlDataAccess implements DataAccess {
+
+    public SqlDataAccess() throws DataAccessException {
+        createTablesIfNotExist();
+    }
+
+    private void createTablesIfNotExist() throws DataAccessException {
+        try (Connection connection = DatabaseManager.getConnection();
+             Statement statement = connection.createStatement()) {
+
+            statement.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS users (
+                    username VARCHAR(255) PRIMARY KEY,
+                    password VARCHAR(255) NOT NULL,
+                    email VARCHAR(255)
+                )
+            """);
+
+            statement.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS auth (
+                    token VARCHAR(255) PRIMARY KEY,
+                    username VARCHAR(255),
+                    FOREIGN KEY (username) REFERENCES users(username)
+                )
+            """);
+
+            statement.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS games (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(255),
+                    gameState TEXT
+                )
+            """);
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Error initializing database tables", e);
+        }
+    }
+
     @Override
     public void clear() {
 
