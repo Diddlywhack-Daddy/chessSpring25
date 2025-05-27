@@ -1,10 +1,13 @@
 package dataaccess;
 
+import chess.ChessGame;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SqlDataAccess implements DataAccess {
@@ -134,22 +137,83 @@ public class SqlDataAccess implements DataAccess {
     }
 
     @Override
-    public void createGame(GameData game) throws DataAccessException {
+    public int createGame(GameData game) throws DataAccessException {
+        String sql = "INSERT INTO games (name, gameState) VALUES (?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            stmt.setString(1, game.gameName());
+            stmt.setString(2, game.game() != null ? game.game().serialize() : null);
+            stmt.executeUpdate();
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);  // ✅ just return the ID
+                } else {
+                    throw new DataAccessException("Failed to retrieve game ID after insert");
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to create game", e);
+        }
     }
+
+
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        return null;
+        String sql = "SELECT id, name, gameState FROM games WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, gameID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String name = rs.getString("name");
+                    String state = rs.getString("gameState");
+                    return new GameData(gameID, null, null, name, ChessGame.deserialize(state));
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to get game", e);
+        }
     }
+
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
-
+        String sql = "UPDATE games SET gameState = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, game.game().serialize());
+            stmt.setInt(2, game.gameID());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to update game", e);
+        }
     }
 
     @Override
     public GameData[] listGames() throws DataAccessException {
-        return new GameData[0];
+        String sql = "SELECT id, name, gameState FROM games";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            List<GameData> games = new ArrayList<>();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String state = rs.getString("gameState");
+                ChessGame game = state != null ? ChessGame.deserialize(state) : null;
+                games.add(new GameData(id, null, null, name, game));
+            }
+
+            return games.toArray(new GameData[0]);
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to list games", e);
+        }
     }
-}
+    }
+

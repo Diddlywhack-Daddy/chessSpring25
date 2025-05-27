@@ -1,5 +1,7 @@
 package chess;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -152,7 +154,15 @@ public class ChessGame {
         return false;
     }
 
+    public String serialize() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
 
+    public static ChessGame deserialize(String json) {
+        Gson gson = new Gson();
+        return gson.fromJson(json, ChessGame.class);
+    }
 
 
     /**
