@@ -105,12 +105,32 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+        String sql = "SELECT token, username FROM auth WHERE token = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authToken);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new AuthData(rs.getString("username"), rs.getString("token"));
+                } else {
+                    return null; // No auth found
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to retrieve auth data", e);
+        }
     }
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
-
+        String sql = "DELETE FROM auth WHERE token = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, authToken);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to delete auth token", e);
+        }
     }
 
     @Override
