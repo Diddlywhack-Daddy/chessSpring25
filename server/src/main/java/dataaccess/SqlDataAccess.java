@@ -77,7 +77,25 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
-        return null;
+        String sql = "SELECT username, password, email FROM users WHERE username = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new UserData(
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email")
+                    );
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to retrieve user", e);
+        }
+
     }
 
     @Override
