@@ -43,8 +43,8 @@ public class Server {
         Spark.staticFiles.location("/web");
 
         // Register your endpoints and handle exceptions here.
-        delete("/db", new ClearHandler(clearService));
         post("/user", new RegisterHandler(userService));
+        delete("/db", new ClearHandler(clearService));
         post("/session", new LoginHandler(userService));
         delete("/session", new LogoutHandler(userService));
         post("/game", new CreateGameHandler(gameService));

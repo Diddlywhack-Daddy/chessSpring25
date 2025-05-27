@@ -10,6 +10,7 @@ import java.sql.*;
 public class SqlDataAccess implements DataAccess {
 
     public SqlDataAccess() throws DataAccessException {
+        DatabaseManager.createDatabase();
         createTablesIfNotExist();
     }
 
@@ -61,6 +62,16 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user.username());
+            stmt.setString(2, user.password());
+            stmt.setString(3, user.email());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to create user", e);
+        }
 
     }
 
