@@ -2,7 +2,6 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
 import model.BasicResult;
 import service.UserService;
 import spark.Request;
@@ -13,13 +12,15 @@ import java.util.Map;
 
 public class LogoutHandler implements Route {
     private final Gson gson = new Gson();
-    private final service.interfaces.UserService service = new UserService(MemoryDataAccess.getInstance());
+    private final UserService service;
+
+    public LogoutHandler(UserService service) {
+        this.service = service;
+    }
 
     @Override
     public Object handle(Request req, Response res) {
         try {
-            //System.out.println("Logout endpoint hit");
-
             String authToken = req.headers("Authorization");
             BasicResult result = service.logout(authToken);
 

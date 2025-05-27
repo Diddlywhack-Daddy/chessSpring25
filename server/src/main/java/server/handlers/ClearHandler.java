@@ -1,7 +1,6 @@
 package server.handlers;
 
 import com.google.gson.Gson;
-import dataaccess.MemoryDataAccess;
 import model.BasicResult;
 import service.ClearService;
 import spark.Request;
@@ -12,14 +11,17 @@ import java.util.Map;
 
 public class ClearHandler implements Route {
     private final Gson gson = new Gson();
-    private final service.interfaces.ClearService service = new ClearService(MemoryDataAccess.getInstance());
+    private final ClearService service;
+
+    public ClearHandler(ClearService service) {
+        this.service = service;
+    }
 
     @Override
     public Object handle(Request req, Response res) {
         BasicResult result = service.clear();
         if (result.success()) {
             res.status(200);
-            //System.out.println("Clear endpoint hit");
             return "{}";
         } else {
             res.status(500);

@@ -1,6 +1,7 @@
 import chess.ChessGame;
 import chess.ChessPiece;
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import dataaccess.SqlDataAccess;
 import server.Server;
@@ -16,16 +17,25 @@ public class Main {
             port = Integer.parseInt(args[0]);
         }
 
-        boolean usingSQLImplementation = false;
+        boolean useSql = true;
+        DataAccess dataAccess;
 
-        DataAccess dataAccess = usingSQLImplementation
-                ? new SqlDataAccess()
-                : new MemoryDataAccess();
+        if (useSql) {
+            try {
+                dataAccess = new SqlDataAccess();
+            } catch (DataAccessException e) {
+                System.err.println("SQL startup failed: " + e.getMessage());
+                return;
+            }
+        } else {
+            dataAccess = new MemoryDataAccess();
+        }
 
         var userService = new UserService(dataAccess);
         var gameService = new GameService(dataAccess);
         var clearService = new ClearService(dataAccess);
         var server = new Server(userService, gameService, clearService);
+
         server.run(port);
 
         var piece = new ChessPiece(ChessGame.TeamColor.WHITE, ChessPiece.PieceType.PAWN);

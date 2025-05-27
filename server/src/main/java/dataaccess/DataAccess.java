@@ -5,7 +5,7 @@ import model.UserData;
 import model.GameData;
 
 public interface DataAccess {
-    void clear();
+    void clear() throws DataAccessException;
 
     //User stuff
     void createUser(UserData user) throws DataAccessException;

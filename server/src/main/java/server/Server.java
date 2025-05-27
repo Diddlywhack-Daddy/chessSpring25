@@ -1,7 +1,9 @@
 package server;
 
 import dataaccess.DataAccess;
+import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.SqlDataAccess;
 import server.handlers.*;
 import service.ClearService;
 import service.GameService;
@@ -14,17 +16,26 @@ public class Server {
     private final GameService gameService;
     private final ClearService clearService;
 
+    public Server() {
+        DataAccess dataAccess;
+        try {
+            dataAccess = new SqlDataAccess();
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to initialize SQL backend", e);
+        }
+
+        this.userService = new UserService(dataAccess);
+        this.gameService = new GameService(dataAccess);
+        this.clearService = new ClearService(dataAccess);
+    }
+
+
     public Server(UserService userService, GameService gameService, ClearService clearService) {
         this.userService = userService;
         this.gameService = gameService;
         this.clearService = clearService;
     }
-    public Server(){
-        DataAccess dataAccess = new MemoryDataAccess();
-        userService = new UserService(dataAccess);
-        gameService = new GameService(dataAccess);
-        clearService = new ClearService(dataAccess);
-    }
+
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
@@ -32,13 +43,13 @@ public class Server {
         Spark.staticFiles.location("/web");
 
         // Register your endpoints and handle exceptions here.
-        delete("/db", new ClearHandler());
-        post("/user", new RegisterHandler());
-        post("/game", new CreateGameHandler());
-        put("/game", new JoinGameHandler());
-        get("/game", new ListGamesHandler());
-        post("/session", new LoginHandler());
-        delete("/session", new LogoutHandler());
+        delete("/db", new ClearHandler(clearService));
+        post("/user", new RegisterHandler(userService));
+        post("/session", new LoginHandler(userService));
+        delete("/session", new LogoutHandler(userService));
+        post("/game", new CreateGameHandler(gameService));
+        get("/game", new ListGamesHandler(gameService));
+        put("/game", new JoinGameHandler(gameService));
 
         Spark.awaitInitialization();
         return Spark.port();

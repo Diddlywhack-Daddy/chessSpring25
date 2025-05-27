@@ -18,28 +18,28 @@ public class SqlDataAccess implements DataAccess {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS users (
-                    username VARCHAR(255) PRIMARY KEY,
-                    password VARCHAR(255) NOT NULL,
-                    email VARCHAR(255)
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS users (
+                            username VARCHAR(255) PRIMARY KEY,
+                            password VARCHAR(255) NOT NULL,
+                            email VARCHAR(255)
+                        )
+                    """);
 
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS auth (
-                    token VARCHAR(255) PRIMARY KEY,
-                    username VARCHAR(255),
-                    FOREIGN KEY (username) REFERENCES users(username)
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS auth (
+                            token VARCHAR(255) PRIMARY KEY,
+                            username VARCHAR(255),
+                            FOREIGN KEY (username) REFERENCES users(username)
+                        )
+                    """);
 
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS games (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    name VARCHAR(255),
-                    gameState TEXT
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS games (
+                            id INT PRIMARY KEY AUTO_INCREMENT,
+                            name VARCHAR(255),
+                            gameState TEXT
+                        )
+                    """);
 
         } catch (SQLException e) {
             throw new DataAccessException("Error initializing database tables", e);
@@ -47,9 +47,17 @@ public class SqlDataAccess implements DataAccess {
     }
 
     @Override
-    public void clear() {
-
+    public void clear() throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM auth");
+            stmt.executeUpdate("DELETE FROM users");
+            stmt.executeUpdate("DELETE FROM games");
+        } catch (SQLException e) {
+            throw new DataAccessException("Failed to clear database", e);
+        }
     }
+
 
     @Override
     public void createUser(UserData user) throws DataAccessException {

@@ -1,7 +1,6 @@
 package server.handlers;
 
 import com.google.gson.Gson;
-import dataaccess.MemoryDataAccess;
 import model.CreateGameRequest;
 import model.CreateGameResult;
 import service.GameService;
@@ -13,7 +12,11 @@ import java.util.Map;
 
 public class CreateGameHandler implements Route {
     private final Gson gson = new Gson();
-    private final service.interfaces.GameService service = new GameService(MemoryDataAccess.getInstance());
+    private final GameService service;
+
+    public CreateGameHandler(GameService service) {
+        this.service = service;
+    }
 
     @Override
     public Object handle(Request req, Response res) {
@@ -39,5 +42,4 @@ public class CreateGameHandler implements Route {
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
-
 }

@@ -2,7 +2,6 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
 import model.JoinGameRequest;
 import service.GameService;
 import spark.Request;
@@ -13,7 +12,11 @@ import java.util.Map;
 
 public class JoinGameHandler implements Route {
     private final Gson gson = new Gson();
-    private final service.interfaces.GameService service = new GameService(MemoryDataAccess.getInstance());
+    private final GameService service;
+
+    public JoinGameHandler(GameService service) {
+        this.service = service;
+    }
 
     @Override
     public Object handle(Request req, Response res) {
@@ -63,5 +66,4 @@ public class JoinGameHandler implements Route {
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
-
 }

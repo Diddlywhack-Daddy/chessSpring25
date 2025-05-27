@@ -2,7 +2,6 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
 import model.AuthResult;
 import model.LoginRequest;
 import service.UserService;
@@ -14,13 +13,15 @@ import java.util.Map;
 
 public class LoginHandler implements Route {
     private final Gson gson = new Gson();
-    private final service.interfaces.UserService service = new UserService(MemoryDataAccess.getInstance());
+    private final UserService service;
+
+    public LoginHandler(UserService service) {
+        this.service = service;
+    }
 
     @Override
     public Object handle(Request req, Response res) {
         try {
-            //System.out.println("Login endpoint hit");
-
             LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
             AuthResult result = service.login(request);
 
