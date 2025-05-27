@@ -3,6 +3,7 @@ package server.handlers;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.JoinGameRequest;
+import service.AuthService;
 import service.GameService;
 import spark.Request;
 import spark.Response;
@@ -12,14 +13,18 @@ import java.util.Map;
 
 public class JoinGameHandler implements Route {
     private final Gson gson = new Gson();
-    private final GameService service;
+    private final GameService gameService;
+    private final AuthService authService;
 
-    public JoinGameHandler(GameService service) {
-        this.service = service;
+    public JoinGameHandler(GameService gameService, AuthService authService) {
+        this.gameService = gameService;
+        this.authService = authService;
     }
 
     @Override
     public Object handle(Request req, Response res) {
+        res.type("application/json");
+
         try {
             String authToken = req.headers("Authorization");
             if (authToken == null || authToken.isBlank()) {
@@ -27,11 +32,12 @@ public class JoinGameHandler implements Route {
                 return gson.toJson(Map.of("message", "Error: unauthorized"));
             }
 
-            JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
+            authService.validateToken(authToken);
 
+            JoinGameRequest request = gson.fromJson(req.body(), JoinGameRequest.class);
             if (request == null || request.gameID() <= 0) {
                 res.status(400);
-                return gson.toJson(Map.of("message", "Error: Invalid game ID"));
+                return gson.toJson(Map.of("message", "Error: invalid game ID"));
             }
 
             String playerColor = request.playerColor();
@@ -39,17 +45,17 @@ public class JoinGameHandler implements Route {
                     !playerColor.equals("WHITE") &&
                     !playerColor.equals("BLACK")) {
                 res.status(400);
-                return gson.toJson(Map.of("message", "Error: Invalid player color"));
+                return gson.toJson(Map.of("message", "Error: invalid player color"));
             }
 
-            service.joinGame(request, authToken);
+            gameService.joinGame(request, authToken);
 
             res.status(200);
-            res.type("application/json");
             return "{}";
 
         } catch (DataAccessException e) {
             String message = e.getMessage().toLowerCase();
+
             if (message.contains("unauthorized")) {
                 res.status(401);
             } else if (message.contains("already taken") || message.contains("forbidden")) {
@@ -61,6 +67,7 @@ public class JoinGameHandler implements Route {
             }
 
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+
         } catch (Exception e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));

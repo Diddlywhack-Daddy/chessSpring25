@@ -19,13 +19,22 @@ public class ClearHandler implements Route {
 
     @Override
     public Object handle(Request req, Response res) {
-        BasicResult result = service.clear();
-        if (result.success()) {
-            res.status(200);
-            return "{}";
-        } else {
+        try {
+            BasicResult result = service.clear();
+            res.type("application/json");
+
+            if (result.success()) {
+                res.status(200);
+                return "{}";
+            } else {
+                res.status(500);
+                return gson.toJson(Map.of("message", "Error: " + result.message()));
+            }
+
+        } catch (Exception e) {
             res.status(500);
-            return gson.toJson(Map.of("message", result.message()));
+            res.type("application/json");
+            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }
 }

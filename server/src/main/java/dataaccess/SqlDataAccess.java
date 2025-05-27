@@ -129,7 +129,8 @@ public class SqlDataAccess implements DataAccess {
             stmt.setString(1, authToken);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new AuthData(rs.getString("username"), rs.getString("token"));
+                    return new AuthData(rs.getString("token"), rs.getString("username"));
+
                 } else {
                     return null; // No auth found
                 }
@@ -161,7 +162,7 @@ public class SqlDataAccess implements DataAccess {
             stmt.setString(2, game.game() != null ? game.game().serialize() : null);
             stmt.setString(3, game.whiteUsername());
             stmt.setString(4, game.blackUsername());
-
+            stmt.executeUpdate();
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {

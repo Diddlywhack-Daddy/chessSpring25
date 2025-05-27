@@ -21,20 +21,24 @@ public class LoginHandler implements Route {
 
     @Override
     public Object handle(Request req, Response res) {
+        res.type("application/json");
+
         try {
             LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
-            AuthResult result = service.login(request);
 
+            if (request == null || request.username() == null || request.password() == null) {
+                res.status(400);
+                return gson.toJson(Map.of("message", "Error: bad request"));
+            }
+
+            AuthResult result = service.login(request);
             res.status(200);
-            res.type("application/json");
             return gson.toJson(result);
 
-        } catch (IllegalArgumentException e) {
-            res.status(400);
-            return gson.toJson(Map.of("message", "Error: bad request"));
         } catch (DataAccessException e) {
             res.status(401);
             return gson.toJson(Map.of("message", "Error: unauthorized"));
+
         } catch (Exception e) {
             res.status(500);
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));

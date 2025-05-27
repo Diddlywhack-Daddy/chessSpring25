@@ -21,25 +21,33 @@ public class RegisterHandler implements Route {
 
     @Override
     public Object handle(Request req, Response res) {
+        res.type("application/json");
+
         try {
             RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
 
-            if (request.username() == null || request.password() == null || request.email() == null) {
+            if (request == null ||
+                    request.username() == null || request.username().isBlank() ||
+                    request.password() == null || request.password().isBlank() ||
+                    request.email() == null || request.email().isBlank()) {
                 res.status(400);
                 return gson.toJson(Map.of("message", "Error: bad request"));
             }
 
             AuthResult result = service.register(request);
-
             res.status(200);
-            res.type("application/json");
             return gson.toJson(result);
 
         } catch (DataAccessException e) {
-            res.status(403);
-            return gson.toJson(Map.of("message", "Error: already taken"));
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("already taken")) {
+                res.status(403); // Forbidden - username taken
+            } else {
+                res.status(500); // Internal Server Error
+            }
+            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         } catch (Exception e) {
-            res.status(500);
+            res.status(500); // Catch-all fallback
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
         }
     }

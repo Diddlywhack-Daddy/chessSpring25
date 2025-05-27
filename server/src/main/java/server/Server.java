@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import dataaccess.SqlDataAccess;
 import server.handlers.*;
+import service.AuthService;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -15,6 +16,7 @@ public class Server {
     private final UserService userService;
     private final GameService gameService;
     private final ClearService clearService;
+    private final AuthService authService;
 
     public Server() {
         DataAccess dataAccess;
@@ -27,12 +29,14 @@ public class Server {
         this.userService = new UserService(dataAccess);
         this.gameService = new GameService(dataAccess);
         this.clearService = new ClearService(dataAccess);
+        this.authService = new AuthService(dataAccess);
     }
 
 
-    public Server(UserService userService, GameService gameService, ClearService clearService) {
+    public Server(UserService userService, GameService gameService, ClearService clearService, AuthService authService) {
         this.userService = userService;
         this.gameService = gameService;
+        this.authService = authService;
         this.clearService = clearService;
     }
 
@@ -46,10 +50,10 @@ public class Server {
         post("/user", new RegisterHandler(userService));
         delete("/db", new ClearHandler(clearService));
         post("/session", new LoginHandler(userService));
-        delete("/session", new LogoutHandler(userService));
-        post("/game", new CreateGameHandler(gameService));
-        get("/game", new ListGamesHandler(gameService));
-        put("/game", new JoinGameHandler(gameService));
+        delete("/session", new LogoutHandler(userService,authService));
+        post("/game", new CreateGameHandler(gameService,authService));
+        get("/game", new ListGamesHandler(gameService,authService));
+        put("/game", new JoinGameHandler(gameService,authService));
 
         Spark.awaitInitialization();
         return Spark.port();
