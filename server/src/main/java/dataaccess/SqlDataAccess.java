@@ -97,25 +97,22 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        System.out.println("Attempting to retrieve auth token: " + authToken);
-        System.out.println("Looking up token: " + authToken);
         String sql = "SELECT token, username FROM auth WHERE token = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, authToken);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    System.out.println("Token found! User: " + rs.getString("username"));
-                    return new AuthData(rs.getString("username"), rs.getString("token"));
+                    return new AuthData(rs.getString("token"), rs.getString("username"));
                 } else {
-                    System.out.println("Token NOT found.");
-                    throw new DataAccessException("Unauthorized");
+                    return null;
                 }
             }
         } catch (SQLException e) {
             throw new DataAccessException("Failed to retrieve auth data", e);
         }
     }
+
 
 
     @Override

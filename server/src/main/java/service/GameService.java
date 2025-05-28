@@ -1,103 +1,106 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
 import model.request.CreateGameRequest;
 import model.request.JoinGameRequest;
 import model.result.CreateGameResult;
+import model.result.JoinGameResult;
 import model.result.ListGamesResult;
+import server.exceptions.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class GameService implements service.interfaces.GameService {
     private final DataAccess data;
-    private final AtomicInteger idCounter = new AtomicInteger(1);
 
-    public GameService(DataAccess dataAccess) {
-        this.data = dataAccess;
-    }
-    @Override
-    public CreateGameResult createGame(CreateGameRequest request, String authToken) throws DataAccessException {
-        if (authToken == null || data.getAuth(authToken) == null) {
-            throw new DataAccessException("Unauthorized");
-        }
-        if (request.gameName() == null) {
-            throw new IllegalArgumentException("Missing game name");
-        }
-
-        int gameID = idCounter.getAndIncrement();
-        var game = new GameData(gameID, null, null, request.gameName(), new chess.ChessGame());
-        data.createGame(game);
-        return new CreateGameResult(gameID);
+    public GameService(DataAccess data) {
+        this.data = data;
     }
 
     @Override
-    public ListGamesResult listGames(String authToken) throws DataAccessException {
-        if (authToken == null || data.getAuth(authToken) == null) {
-            throw new dataaccess.DataAccessException("Unauthorized");
-        }
-
-        GameData[] games = data.listGames();
-        List<ListGamesResult.GameInfo> infoList = new ArrayList<>();
-
-        for (GameData game : games) {
-            infoList.add(new ListGamesResult.GameInfo(
-                    game.gameID(),
-                    game.whiteUsername(),
-                    game.blackUsername(),
-                    game.gameName()
-            ));
-        }
-
-        return new ListGamesResult(infoList);
-    }
-
-    @Override
-    public BasicResult joinGame(JoinGameRequest request, String authToken) throws DataAccessException {
-        if (authToken == null || request.playerColor() == null) {
-            throw new DataAccessException("Missing auth or color");
+    public CreateGameResult createGame(CreateGameRequest request, String authToken)
+            throws DataAccessException, BadRequestException, UnauthorizedException {
+        if (authToken == null || authToken.isBlank()) {
+            throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
         AuthData auth = data.getAuth(authToken);
         if (auth == null) {
-            throw new DataAccessException("Unauthorized");
+            throw new UnauthorizedException("Error: Unauthorized access.");
+        }
+
+        if (request == null || request.gameName() == null || request.gameName().isBlank()) {
+            throw new BadRequestException("Error: Invalid game name.");
+        }
+
+        int gameID = data.createGame(new GameData(0, null, null, request.gameName(), new ChessGame()));
+        return new CreateGameResult(gameID);
+    }
+
+    @Override
+    public ListGamesResult listGames(String authToken)
+            throws DataAccessException, UnauthorizedException {
+
+        if (authToken == null || authToken.isBlank()) {
+            throw new UnauthorizedException("Error: Unauthorized access.");
+        }
+
+        AuthData auth = data.getAuth(authToken);
+        if (auth == null) {
+            throw new UnauthorizedException("Error: Unauthorized access.");
+        }
+
+        Collection<GameData> gameList = List.of(data.listGames());  // or Arrays.asList(...) if array
+        return new ListGamesResult(gameList);
+    }
+
+
+    @Override
+    public JoinGameResult joinGame(JoinGameRequest request, String authToken)
+            throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
+
+        if (authToken == null || request == null || request.color() == null) {
+            throw new BadRequestException("Error: Invalid request.");
+        }
+
+        AuthData auth = data.getAuth(authToken);
+        if (auth == null) {
+            throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
         GameData game = data.getGame(request.gameID());
         if (game == null) {
-            throw new DataAccessException("Invalid game ID");
+            throw new BadRequestException("Error: Invalid request.");
         }
 
         String username = auth.username();
-        String color = request.playerColor();
+        ChessGame.TeamColor color = request.color();
 
         switch (color) {
-            case "WHITE":
+            case WHITE:
                 if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
-                    throw new DataAccessException("Color already taken");
+                    throw new AlreadyTakenException("Error: Another player has already taken that spot.");
                 }
                 game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
                 break;
 
-            case "BLACK":
+            case BLACK:
                 if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
-                    throw new DataAccessException("Color already taken");
+                    throw new AlreadyTakenException("Error: Another player has already taken that spot.");
                 }
                 game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
                 break;
 
-
             default:
-                throw new DataAccessException("Invalid player color");
+                throw new BadRequestException("Error: Invalid player color.");
         }
 
         data.updateGame(game);
-        return new BasicResult(true, null);
+        return new JoinGameResult();
     }
-
-
-
 }

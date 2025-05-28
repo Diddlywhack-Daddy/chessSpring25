@@ -19,7 +19,7 @@ public class LogoutHandler implements Route {
     public Object handle(Request request, Response response) {
         try {
             String token = request.headers("authorization");
-            userService.logout(new LogoutRequest(token));
+            userService.logout(token);
             response.status(200);
             return "";
         } catch (UnauthorizedException e) {

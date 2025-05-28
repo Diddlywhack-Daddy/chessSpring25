@@ -2,61 +2,71 @@ package service;
 
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.*;
+import model.AuthData;
+import model.UserData;
 import model.request.LoginRequest;
 import model.request.RegisterRequest;
+import model.result.LoginResult;
+import model.result.LogoutResult;
+import model.result.RegisterResult;
+import org.mindrot.jbcrypt.BCrypt;
+import server.exceptions.*;
 
 import java.util.UUID;
 
 public class UserService implements service.interfaces.UserService {
     private final DataAccess data;
 
-    public UserService(DataAccess dataAccess) {
-        this.data = dataAccess;
+    public UserService(DataAccess data) {
+        this.data = data;
     }
 
     @Override
-    public AuthResult register(RegisterRequest request) throws DataAccessException {
+    public RegisterResult register(RegisterRequest request) throws DataAccessException, BadRequestException, AlreadyTakenException {
         if (request.username() == null || request.password() == null || request.email() == null) {
-            throw new IllegalArgumentException("Missing fields");
+            throw new BadRequestException("Error: Invalid username or password.");
         }
 
-        var user = new UserData(request.username(), request.password(), request.email());
+        if (data.getUser(request.username()) != null) {
+            throw new AlreadyTakenException("Error: Username already taken.");
+        }
+
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+        UserData user = new UserData(request.username(), hashedPassword, request.email());
         data.createUser(user);
 
-        var token = UUID.randomUUID().toString();
-        var auth = new AuthData(token, request.username());
-        data.createAuth(auth);
+        String token = UUID.randomUUID().toString();
+        data.createAuth(new AuthData(token, request.username()));
 
-        return new AuthResult(request.username(), token);
+        return new RegisterResult(request.username(), token);
     }
+
     @Override
-    public AuthResult login(LoginRequest request) throws DataAccessException {
+    public LoginResult login(LoginRequest request) throws DataAccessException, UnauthorizedException {
         if (request.username() == null || request.password() == null) {
-            throw new IllegalArgumentException("Missing username or password");
+            throw new UnauthorizedException("Error: Invalid username or password.");
         }
 
         UserData user = data.getUser(request.username());
-        if (user == null || !user.password().equals(request.password())) {
-            throw new DataAccessException("Invalid credentials");
+        if (user == null || !BCrypt.checkpw(request.password(), user.password())) {
+            throw new UnauthorizedException("Error: Incorrect username or password.");
         }
+
         String token = UUID.randomUUID().toString();
-        AuthData auth = new AuthData(token, user.username());
-        data.createAuth(auth);
-
-        return new AuthResult(user.username(), token);
+        data.createAuth(new AuthData(token, user.username()));
+        return new LoginResult(user.username(), token);
     }
 
-
-
-    @Override
-    public BasicResult logout(String authToken) throws DataAccessException {
-        if (authToken == null || data.getAuth(authToken) == null) {
-            throw new dataaccess.DataAccessException("Invalid token");
+    public LogoutResult logout(String token) throws DataAccessException, UnauthorizedException {
+        if (token == null || token.isBlank() || data.getAuth(token) == null) {
+            throw new UnauthorizedException("Error: Invalid logout.");
         }
 
-        data.deleteAuth(authToken);
-        return new BasicResult(true, null);
+        data.deleteAuth(token);
+        return new LogoutResult();
     }
 
+    public String generateToken() {
+        return UUID.randomUUID().toString();
+    }
 }

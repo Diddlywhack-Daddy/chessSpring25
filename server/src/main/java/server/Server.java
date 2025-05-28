@@ -50,10 +50,10 @@ public class Server {
         post("/user", new RegisterHandler(userService));
         delete("/db", new ClearHandler(clearService));
         post("/session", new LoginHandler(userService));
-        delete("/session", new LogoutHandler(userService,authService));
-        post("/game", new CreateGameHandler(gameService,authService));
-        get("/game", new ListGamesHandler(gameService,authService));
-        put("/game", new JoinGameHandler(gameService,authService));
+        delete("/session", new LogoutHandler(userService));
+        post("/game", new CreateGameHandler(gameService));
+        get("/game", new ListGamesHandler(gameService));
+        put("/game", new JoinGameHandler(gameService));
 
         Spark.awaitInitialization();
         return Spark.port();

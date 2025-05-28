@@ -1,7 +1,8 @@
 package service;
 
 import dataaccess.DataAccess;
-import model.BasicResult;
+import model.result.ClearResult;
+
 
 public class ClearService implements service.interfaces.ClearService {
     private final DataAccess data;
@@ -11,12 +12,12 @@ public class ClearService implements service.interfaces.ClearService {
     }
 
     @Override
-    public BasicResult clear() {
+    public ClearResult clear() {
         try{
             data.clear();
-            return new BasicResult(true, null);
+            return new ClearResult(true, "Successfully cleared data");
         } catch (Exception e) {
-            return new BasicResult(false, "Error: "+e.getMessage());
+            return new ClearResult(false, "Error: "+e.getMessage());
         }
     }
 }

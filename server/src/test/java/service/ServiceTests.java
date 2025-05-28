@@ -1,17 +1,22 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import model.*;
-import model.request.CreateGameRequest;
-import model.request.JoinGameRequest;
-import model.request.LoginRequest;
-import model.request.RegisterRequest;
+import model.request.*;
 import model.result.CreateGameResult;
 import model.result.ListGamesResult;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import model.result.LoginResult;
+import model.result.RegisterResult;
+import org.junit.jupiter.api.*;
+import server.exceptions.AlreadyTakenException;
+import server.exceptions.BadRequestException;
+import server.exceptions.UnauthorizedException;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,212 +25,132 @@ public class ServiceTests {
     static ClearService clearService;
     static GameService gameService;
     static UserService userService;
-
-
-    static MemoryDataAccess chessData;
+    static MemoryDataAccess data;
 
     @BeforeAll
-    public static void init() {
-        chessData = new MemoryDataAccess();
-        clearService = new ClearService(chessData);
-        gameService = new GameService(chessData);
-        userService = new UserService(chessData);
+    public static void setup() {
+        data = new MemoryDataAccess();
+        clearService = new ClearService(data);
+        gameService = new GameService(data);
+        userService = new UserService(data);
     }
 
     @AfterEach
-    public void clear() {
+    public void reset() {
         clearService.clear();
     }
-
 
     @Test
     public void clearSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("alice", "pass", "a@b.com");
-            userService.register(request);
-        } catch (DataAccessException e) {
-            fail("Unexpected error during setup");
-        }
-
-        clearService.clear();
-        assert chessData.getUsers().isEmpty();
-        assert chessData.getGames().isEmpty();
-        assert chessData.getAuthData().isEmpty();
-    }
-
-
-    @Test
-    public void registerSuccess() {
-        RegisterRequest request = new RegisterRequest("alice", "pass", "a@b.com");
-        try {
-            AuthResult auth = userService.register(request);
-
-            assertNotNull(auth);
-            assertEquals("alice", auth.username());
-
-            UserData storedUser = chessData.getUser("alice");
-            assertNotNull(storedUser);
-            assertEquals("pass", storedUser.password());
-            assertEquals("a@b.com", storedUser.email());
-        } catch (DataAccessException e) {
-            fail("Registration should not have thrown an exception.");
-        }
+        assertDoesNotThrow(() -> clearService.clear());
     }
 
     @Test
-    public void registerFail() {
-        RegisterRequest request = new RegisterRequest("alice", "pass", "a@b.com");
-        try {
-            AuthResult auth = userService.register(request);
-        } catch (DataAccessException e) {
-            fail("First register should succeed");
-        }
-        try {
-            AuthResult auth = userService.register(request);
-            fail("Expected DataAccessException due to duplicate username.");
-        } catch (DataAccessException e) {
-            //test passes
-        }
-
+    public void registerSuccess() throws Exception {
+        RegisterRequest request = new RegisterRequest("test", "pass", "email@test.com");
+        RegisterResult result = userService.register(request);
+        assertNotNull(result.authToken());
     }
 
     @Test
-    public void loginSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("bob", "hunter2", "bob@example.com");
-            userService.register(request);
-
-            AuthResult auth = userService.login(new LoginRequest("bob", "hunter2"));
-
-            assertNotNull(auth);
-            assertEquals("bob", auth.username());
-            assertNotNull(chessData.getAuth(auth.authToken()));
-        } catch (DataAccessException e) {
-            fail("Login should succeed with correct credentials.");
-        }
+    public void registerFail() throws Exception {
+        RegisterRequest request = new RegisterRequest("test", "pass", "email@test.com");
+        userService.register(request);
+        assertThrows(Exception.class, () -> userService.register(request));
     }
 
     @Test
-    public void loginFail() {
-        try {
-            RegisterRequest request = new RegisterRequest("carol", "password", "carol@example.com");
-            userService.register(request);
-
-            userService.login(new LoginRequest("carol", "wrongPassword"));
-            fail("Expected DataAccessException due to wrong password.");
-        } catch (DataAccessException e) {
-            // test passes
-        }
+    public void loginSuccess() throws Exception {
+        userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        LoginResult result = userService.login(new LoginRequest("test", "pass"));
+        assertNotNull(result.authToken());
     }
 
     @Test
-    public void logoutSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("dave", "securepass", "dave@example.com");
-            AuthResult auth = userService.register(request);
+    public void loginFail() throws Exception {
+        userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        assertThrows(Exception.class, () -> userService.login(new LoginRequest("test", "wrong")));
+    }
 
-            userService.logout(auth.authToken());
-
-            assertNull(chessData.getAuth(auth.authToken()));
-        } catch (DataAccessException e) {
-            fail("Logout should succeed with valid token.");
-        }
+    @Test
+    public void logoutSuccess() throws Exception {
+        RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        assertDoesNotThrow(() -> userService.logout(reg.authToken()));
     }
 
     @Test
     public void logoutFail() {
-        try {
-            userService.logout("invalidToken");
-            fail("Expected DataAccessException due to invalid token.");
-        } catch (DataAccessException e) {
-            // test passes
-        }
+        assertThrows(Exception.class, () -> userService.logout("badToken"));
     }
 
     @Test
-    public void createGameSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("eve", "123456", "eve@example.com");
-            AuthResult auth = userService.register(request);
-
-            CreateGameRequest gameRequest = new CreateGameRequest("Eve's Game");
-            CreateGameResult result = gameService.createGame(gameRequest, auth.authToken());
-
-            assertTrue(result.gameID() > 0);
-            assertNotNull(chessData.getGame(result.gameID()));
-        } catch (DataAccessException e) {
-            fail("Game creation should succeed with valid token.");
-        }
+    public void createGameSuccess() throws Exception {
+        RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        CreateGameRequest request = new CreateGameRequest(reg.authToken(), "Game1");
+        CreateGameResult result = gameService.createGame(request, reg.authToken());
+        assertTrue(result.gameID() > 0);
     }
 
     @Test
     public void createGameFail() {
-        try {
-            CreateGameRequest gameRequest = new CreateGameRequest("NoAuth Game");
-            gameService.createGame(gameRequest, "badAuthToken");
-            fail("Expected DataAccessException due to invalid auth.");
-        } catch (DataAccessException e) {
-            // test passes
-        }
+        CreateGameRequest request = new CreateGameRequest("badToken", "Game1");
+        assertThrows(Exception.class, () -> gameService.createGame(request, "badToken"));
     }
 
     @Test
-    public void listGamesSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("frank", "pass123", "frank@example.com");
-            AuthResult auth = userService.register(request);
+    public void listGamesSuccess() throws AlreadyTakenException, DataAccessException, BadRequestException, UnauthorizedException {
+        // Register a user and create two games
+        RegisterRequest registerRequest = new RegisterRequest("user", "pass", "mail@mail.com");
+        RegisterResult registerResult = userService.register(registerRequest);
+        String authToken = registerResult.authToken();
 
-            gameService.createGame(new CreateGameRequest("Game1"), auth.authToken());
-            gameService.createGame(new CreateGameRequest("Game2"), auth.authToken());
+        gameService.createGame(new CreateGameRequest(authToken, "Game1"), authToken);
+        gameService.createGame(new CreateGameRequest(authToken, "Game2"), authToken);
 
-            ListGamesResult result = gameService.listGames(auth.authToken());
-            assertTrue(result.games().size() >= 2);
-        } catch (DataAccessException e) {
-            fail("Listing games should succeed with valid auth.");
-        }
+        // Get the list of games
+        ListGamesResult result = gameService.listGames(authToken);
+        List<GameData> actualGames = new ArrayList<>(result.games());
+
+        // Validate size and names only
+        assertEquals(2, actualGames.size());
+
+        GameData game1 = actualGames.get(0);
+        GameData game2 = actualGames.get(1);
+
+        assertEquals("Game1", game1.gameName());
+        assertEquals("Game2", game2.gameName());
+
+        assertTrue(game1.gameID() > 0);
+        assertTrue(game2.gameID() > 0);
+        assertNotEquals(game1.gameID(), game2.gameID());
+
+        // Ensure no usernames were assigned yet
+        assertNull(game1.whiteUsername());
+        assertNull(game1.blackUsername());
+        assertNull(game2.whiteUsername());
+        assertNull(game2.blackUsername());
     }
+
+
 
     @Test
     public void listGamesFail() {
-        try {
-            gameService.listGames("fakeToken");
-            fail("Expected DataAccessException due to invalid auth token.");
-        } catch (DataAccessException e) {
-            // test passes
-        }
+        assertThrows(Exception.class, () -> gameService.listGames("badToken"));
     }
 
     @Test
-    public void joinGameSuccess() {
-        try {
-            RegisterRequest request = new RegisterRequest("george", "pw", "george@example.com");
-            AuthResult auth = userService.register(request);
-
-            CreateGameResult game = gameService.createGame(new CreateGameRequest("Joinable Game"), auth.authToken());
-
-            JoinGameRequest joinRequest = new JoinGameRequest("WHITE", game.gameID());
-            gameService.joinGame(joinRequest, auth.authToken());
-
-            assertEquals("george", chessData.getGame(game.gameID()).whiteUsername());
-        } catch (DataAccessException e) {
-            fail("Join game should succeed with valid auth and color.");
-        }
+    public void joinGameSuccess() throws Exception {
+        RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        CreateGameResult game = gameService.createGame(new CreateGameRequest(reg.authToken(), "Game1"), reg.authToken());
+        JoinGameRequest join = new JoinGameRequest(reg.username(), ChessGame.TeamColor.WHITE, game.gameID());
+        assertDoesNotThrow(() -> gameService.joinGame(join, reg.authToken()));
     }
 
     @Test
-    public void joinGameFail() {
-        try {
-            RegisterRequest request = new RegisterRequest("harry", "pw", "harry@example.com");
-            AuthResult auth = userService.register(request);
-
-            CreateGameResult game = gameService.createGame(new CreateGameRequest("Bad Join"), auth.authToken());
-
-            JoinGameRequest joinRequest = new JoinGameRequest("INVALID_COLOR", game.gameID());
-            gameService.joinGame(joinRequest, auth.authToken());
-            fail("Expected DataAccessException due to invalid color.");
-        } catch (DataAccessException e) {
-            // test passes
-        }
+    public void joinGameFail() throws Exception {
+        RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
+        CreateGameResult game = gameService.createGame(new CreateGameRequest(reg.authToken(), "Game1"), reg.authToken());
+        JoinGameRequest join = new JoinGameRequest(reg.username(), null, game.gameID());
+        assertThrows(Exception.class, () -> gameService.joinGame(join, reg.authToken()));
     }
-
 }

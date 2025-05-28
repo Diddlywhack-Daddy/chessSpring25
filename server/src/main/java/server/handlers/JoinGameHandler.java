@@ -1,5 +1,6 @@
 package server.handlers;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.request.JoinGameRequest;
@@ -20,8 +21,8 @@ public class JoinGameHandler implements Route {
         try {
             String token = request.headers("authorization");
             JoinGameRequest body = new Gson().fromJson(request.body(), JoinGameRequest.class);
-            JoinGameRequest gameRequest = new JoinGameRequest(token, body.playerColor(), body.gameID());
-            gameService.joinGame(gameRequest);
+            JoinGameRequest gameRequest = new JoinGameRequest(token, body.color(), body.gameID());
+            gameService.joinGame(gameRequest,token);
             response.status(200);
             return "";
         } catch (UnauthorizedException e) {

@@ -1,7 +1,8 @@
 package service.interfaces;
 
-import model.BasicResult;
+
+import model.result.ClearResult;
 
 public interface ClearService {
-    BasicResult clear();
+    ClearResult clear();
 }

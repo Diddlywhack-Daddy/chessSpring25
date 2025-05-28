@@ -1,7 +1,9 @@
 package model.result;
 
-import java.util.List;
+import model.GameData;
 
-public record ListGamesResult(List<GameInfo> games) {
-    public record GameInfo(int gameID, String whiteUsername, String blackUsername, String gameName) {}
+import java.util.Collection;
+
+public record ListGamesResult(Collection<GameData> games) {
 }
+

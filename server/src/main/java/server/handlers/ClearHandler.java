@@ -1,7 +1,7 @@
 package server.handlers;
 
 import com.google.gson.Gson;
-import model.BasicResult;
+import model.result.ClearResult;
 import service.ClearService;
 import spark.Request;
 import spark.Response;
@@ -22,8 +22,8 @@ public class ClearHandler implements Route {
         res.type("application/json");
 
         try {
-            BasicResult result = service.clear();
-            if (result.success()) {
+            ClearResult result = service.clear();
+            if (result.Success()) {
                 res.status(200);
                 return "{}";
             } else {

@@ -1,20 +1,26 @@
 package service.interfaces;
 
 import dataaccess.DataAccessException;
-import model.BasicResult;
 import model.request.CreateGameRequest;
 import model.result.CreateGameResult;
 import model.request.JoinGameRequest;
+import model.result.JoinGameResult;
 import model.result.ListGamesResult;
+import server.exceptions.AlreadyTakenException;
+import server.exceptions.BadRequestException;
+import server.exceptions.UnauthorizedException;
 
 public interface GameService {
 
 
-    CreateGameResult createGame(CreateGameRequest request, String authToken) throws DataAccessException;
+    CreateGameResult createGame(CreateGameRequest request, String authToken)
+            throws DataAccessException, BadRequestException, UnauthorizedException;
 
 
-    ListGamesResult listGames(String authToken) throws DataAccessException;
+    ListGamesResult listGames(String authToken)
+            throws DataAccessException, UnauthorizedException;
 
 
-    BasicResult joinGame(JoinGameRequest request, String authToken) throws DataAccessException;
+    JoinGameResult joinGame(JoinGameRequest request, String authToken)
+            throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException;
 }

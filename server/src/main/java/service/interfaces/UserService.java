@@ -1,13 +1,17 @@
 package service.interfaces;
 
 import dataaccess.DataAccessException;
-import model.AuthResult;
-import model.BasicResult;
 import model.request.LoginRequest;
 import model.request.RegisterRequest;
+import model.result.LoginResult;
+import model.result.LogoutResult;
+import model.result.RegisterResult;
+import server.exceptions.AlreadyTakenException;
+import server.exceptions.BadRequestException;
+import server.exceptions.UnauthorizedException;
 
 public interface UserService {
-    AuthResult register(RegisterRequest req) throws DataAccessException;
-    AuthResult login(LoginRequest req) throws DataAccessException;
-    BasicResult logout(String authToken) throws Exception;
+    RegisterResult register(RegisterRequest req) throws DataAccessException, BadRequestException, AlreadyTakenException;
+    LoginResult login(LoginRequest req) throws DataAccessException, UnauthorizedException;
+    LogoutResult logout(String authToken) throws Exception;
 }
