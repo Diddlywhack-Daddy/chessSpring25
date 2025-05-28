@@ -38,9 +38,11 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid game name.");
         }
 
-        int gameID = data.createGame(new GameData(0, null, null, request.gameName(), new ChessGame()));
+        GameData newGame = new GameData(0, auth.username(), null, request.gameName(), new ChessGame());
+        int gameID = data.createGame(newGame);
         return new CreateGameResult(gameID);
     }
+
 
     @Override
     public ListGamesResult listGames(String authToken)
@@ -81,24 +83,23 @@ public class GameService implements service.interfaces.GameService {
         String username = auth.username();
         ChessGame.TeamColor color = request.color();
 
-        switch (color) {
-            case WHITE:
-                if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
-                    throw new AlreadyTakenException("Error: Another player has already taken that spot.");
-                }
-                game = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
-                break;
-
-            case BLACK:
-                if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
-                    throw new AlreadyTakenException("Error: Another player has already taken that spot.");
-                }
-                game = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
-                break;
-
-            default:
-                throw new BadRequestException("Error: Invalid player color.");
+        if (color == ChessGame.TeamColor.WHITE) {
+            if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {
+                throw new AlreadyTakenException("Error: Another player has already taken that spot.");
+            }
+        } else if (color == ChessGame.TeamColor.BLACK) {
+            if (game.blackUsername() != null && !game.blackUsername().equals(username)) {
+                throw new AlreadyTakenException("Error: Another player has already taken that spot.");
+            }
+        } else {
+            throw new BadRequestException("Error: Invalid player color.");
         }
+
+        String white = (color == ChessGame.TeamColor.WHITE) ? username : game.whiteUsername();
+        String black = (color == ChessGame.TeamColor.BLACK) ? username : game.blackUsername();
+        GameData updatedGame = new GameData(game.gameID(), white, black, game.gameName(), game.game());
+        data.updateGame(updatedGame);
+
 
         data.updateGame(game);
         return new JoinGameResult();

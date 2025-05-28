@@ -8,7 +8,9 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
 
 
 public class SqlDataAccess implements DataAccess {
@@ -23,36 +25,35 @@ public class SqlDataAccess implements DataAccess {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate("""
-                        CREATE TABLE IF NOT EXISTS users (
-                            username VARCHAR(255) PRIMARY KEY,
-                            password VARCHAR(255) NOT NULL,
-                            email VARCHAR(255)
-                        )
-                    """);
+                CREATE TABLE IF NOT EXISTS users (
+                    username VARCHAR(255) PRIMARY KEY,
+                    password VARCHAR(255) NOT NULL,
+                    email VARCHAR(255)
+                )
+            """);
 
             statement.executeUpdate("""
-                        CREATE TABLE IF NOT EXISTS auth (
-                            token VARCHAR(255) PRIMARY KEY,
-                            username VARCHAR(255),
-                            FOREIGN KEY (username) REFERENCES users(username)
-                        )
-                    """);
+                CREATE TABLE IF NOT EXISTS auth (
+                    token VARCHAR(255) PRIMARY KEY,
+                    username VARCHAR(255),
+                    FOREIGN KEY (username) REFERENCES users(username)
+                )
+            """);
 
             statement.executeUpdate("""
-                        CREATE TABLE IF NOT EXISTS games (
-                            id INT PRIMARY KEY AUTO_INCREMENT,
-                            name VARCHAR(255),
-                            gameState TEXT,
-                            white VARCHAR(255),
-                            black VARCHAR(255),
-                            FOREIGN KEY (white) REFERENCES users(username),
-                            FOREIGN KEY (black) REFERENCES users(username)
-                        )
-                    """);
-
+                CREATE TABLE IF NOT EXISTS games (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(255),
+                    gameState TEXT,
+                    white VARCHAR(255),
+                    black VARCHAR(255),
+                    FOREIGN KEY (white) REFERENCES users(username),
+                    FOREIGN KEY (black) REFERENCES users(username)
+                )
+            """);
 
         } catch (SQLException e) {
-            throw new DataAccessException("Error initializing database tables", e);
+            throw new DataAccessException("Error: initializing database tables", e);
         }
     }
 
@@ -64,12 +65,9 @@ public class SqlDataAccess implements DataAccess {
             stmt.executeUpdate("DELETE FROM users");
             stmt.executeUpdate("DELETE FROM games");
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to clear database", e);
+            throw new DataAccessException("Error: failed to clear database", e);
         }
     }
-
-
-
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
@@ -82,18 +80,15 @@ public class SqlDataAccess implements DataAccess {
                     return new UserData(
                             rs.getString("username"),
                             rs.getString("password"),
-                            rs.getString("email")
-                    );
+                            rs.getString("email"));
                 } else {
                     return null;
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to retrieve user", e);
+            throw new DataAccessException("Error: failed to retrieve user", e);
         }
-
     }
-
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
@@ -109,11 +104,9 @@ public class SqlDataAccess implements DataAccess {
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to retrieve auth data", e);
+            throw new DataAccessException("Error: failed to retrieve auth data", e);
         }
     }
-
-
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
@@ -123,26 +116,27 @@ public class SqlDataAccess implements DataAccess {
             stmt.setString(1, authToken);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to delete auth token", e);
+            throw new DataAccessException("Error: failed to delete auth token", e);
         }
     }
 
-
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        System.out.println("Creating user: " + user.username());
+        if (user.password() == null) {
+            throw new DataAccessException("Error: password cannot be null");
+        }
+
+        System.out.println("Creating user with password hash: " + user.password());
+
         String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
             stmt.setString(1, user.username());
-            stmt.setString(2, hashedPassword);
+            stmt.setString(2, user.password());
             stmt.setString(3, user.email());
             stmt.executeUpdate();
-            System.out.println("User created successfully: " + user.username());
         } catch (SQLException e) {
-            System.err.println("Error creating user: " + e.getMessage());
-            throw new DataAccessException("Failed to create user", e);
+            throw new DataAccessException("Error: failed to create user", e);
         }
     }
 
@@ -158,7 +152,7 @@ public class SqlDataAccess implements DataAccess {
             System.out.println("Auth token created successfully: " + auth.authToken());
         } catch (SQLException e) {
             System.err.println("Error creating auth token: " + e.getMessage());
-            throw new DataAccessException("Failed to create auth token", e);
+            throw new DataAccessException("Error: failed to create auth token", e);
         }
     }
 
@@ -168,6 +162,7 @@ public class SqlDataAccess implements DataAccess {
         String sql = "INSERT INTO games (name, gameState, white, black) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             stmt.setString(1, game.gameName());
             stmt.setString(2, game.game() != null ? game.game().serialize() : null);
             stmt.setString(3, game.whiteUsername());
@@ -180,15 +175,28 @@ public class SqlDataAccess implements DataAccess {
                     System.out.println("Game created with ID: " + gameId);
                     return gameId;
                 } else {
-                    throw new DataAccessException("Failed to retrieve game ID after insert");
+                    throw new DataAccessException("Error: failed to retrieve game ID after insert");
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error creating game: " + e.getMessage());
-            throw new DataAccessException("Failed to create game", e);
+            throw new DataAccessException("Error: failed to create game", e);
         }
     }
 
+    @Override
+    public void updateGame(GameData game) throws DataAccessException {
+        String sql = "UPDATE games SET gameState = ?, white = ?, black = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, game.game().serialize());
+            stmt.setString(2, game.whiteUsername());
+            stmt.setString(3, game.blackUsername());
+            stmt.setInt(4, game.gameID());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error: failed to update game", e);
+        }
+    }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
@@ -198,32 +206,37 @@ public class SqlDataAccess implements DataAccess {
             stmt.setInt(1, gameID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String name = rs.getString("name");
-                    String state = rs.getString("gameState");
-                    String white = rs.getString("white");
-                    String black = rs.getString("black");
-
-                    return new GameData(gameID, white, black, name, ChessGame.deserialize(state));
-
+                    return new GameData(
+                            rs.getInt("id"),
+                            rs.getString("white"),
+                            rs.getString("black"),
+                            rs.getString("name"),
+                            ChessGame.deserialize(rs.getString("gameState"))
+                    );
                 }
                 return null;
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to get game", e);
+            throw new DataAccessException("Error: failed to get game", e);
         }
     }
 
 
-    @Override
-    public void updateGame(GameData game) throws DataAccessException {
-        String sql = "UPDATE games SET gameState = ? WHERE id = ?";
+    public Collection<UserData> listUsers() throws DataAccessException {
+        List<UserData> users = new ArrayList<>();
+        String sql = "SELECT username, password, email FROM users";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, game.game().serialize());
-            stmt.setInt(2, game.gameID());
-            stmt.executeUpdate();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                users.add(new UserData(
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("email")));
+            }
+            return users;
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to update game", e);
+            throw new DataAccessException("Error: failed to list users", e);
         }
     }
 
@@ -236,21 +249,19 @@ public class SqlDataAccess implements DataAccess {
 
             List<GameData> games = new ArrayList<>();
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                String state = rs.getString("gameState");
-                String white = rs.getString("white");
-                String black = rs.getString("black");
-                ChessGame game = state != null ? ChessGame.deserialize(state) : null;
-
-                games.add(new GameData(id, white, black, name, game));
+                ChessGame game = rs.getString("gameState") != null
+                        ? ChessGame.deserialize(rs.getString("gameState"))
+                        : null;
+                games.add(new GameData(
+                        rs.getInt("id"),
+                        rs.getString("white"),
+                        rs.getString("black"),
+                        rs.getString("name"),
+                        game));
             }
-
             return games.toArray(new GameData[0]);
-
         } catch (SQLException e) {
-            throw new DataAccessException("Failed to list games", e);
+            throw new DataAccessException("Error: failed to list games", e);
         }
     }
 }
-
