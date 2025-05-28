@@ -2,53 +2,37 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.AuthResult;
-import model.RegisterRequest;
+import model.request.RegisterRequest;
+import model.result.RegisterResult;
+import server.ErrorMessage;
+import server.exceptions.AlreadyTakenException;
+import server.exceptions.BadRequestException;
 import service.UserService;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-
-import java.util.Map;
+import spark.*;
 
 public class RegisterHandler implements Route {
-    private final Gson gson = new Gson();
-    private final UserService service;
+    private final UserService userService;
 
-    public RegisterHandler(UserService service) {
-        this.service = service;
+    public RegisterHandler(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
-
+    public Object handle(Request request, Response response) {
         try {
-            RegisterRequest request = gson.fromJson(req.body(), RegisterRequest.class);
-
-            if (request == null ||
-                    request.username() == null || request.username().isBlank() ||
-                    request.password() == null || request.password().isBlank() ||
-                    request.email() == null || request.email().isBlank()) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
-            }
-
-            AuthResult result = service.register(request);
-            res.status(200);
-            return gson.toJson(result);
-
+            RegisterRequest user = new Gson().fromJson(request.body(), RegisterRequest.class);
+            RegisterResult result = userService.register(user);
+            response.status(200);
+            return new Gson().toJson(result);
+        } catch (AlreadyTakenException e) {
+            response.status(403);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
+        } catch (BadRequestException e) {
+            response.status(400);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         } catch (DataAccessException e) {
-            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            if (msg.contains("already taken")) {
-                res.status(403); // Forbidden - username taken
-            } else {
-                res.status(500); // Internal Server Error
-            }
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            res.status(500); // Catch-all fallback
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            response.status(500);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         }
     }
 }

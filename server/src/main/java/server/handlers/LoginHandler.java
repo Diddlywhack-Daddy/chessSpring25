@@ -2,59 +2,33 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.AuthResult;
-import model.LoginRequest;
+import model.request.LoginRequest;
+import model.result.LoginResult;
+import server.ErrorMessage;
+import server.exceptions.UnauthorizedException;
 import service.UserService;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-
-import java.util.Map;
+import spark.*;
 
 public class LoginHandler implements Route {
-    private final Gson gson = new Gson();
-    private final UserService service;
+    private final UserService userService;
 
-    public LoginHandler(UserService service) {
-        this.service = service;
+    public LoginHandler(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
-
+    public Object handle(Request request, Response response) {
         try {
-            LoginRequest request = gson.fromJson(req.body(), LoginRequest.class);
-
-            if (request == null || request.username() == null || request.password() == null) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
-            }
-
-            AuthResult result = service.login(request);
-            res.status(200);
-            return gson.toJson(result);
-
+            LoginRequest loginRequest = new Gson().fromJson(request.body(), LoginRequest.class);
+            LoginResult result = userService.login(loginRequest);
+            response.status(200);
+            return new Gson().toJson(result);
+        } catch (UnauthorizedException e) {
+            response.status(401);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         } catch (DataAccessException e) {
-            String message = e.getMessage().toLowerCase();
-
-            if (message.contains("connection") || message.contains("sql") || message.contains("database")) {
-                res.status(500);
-                return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-            }
-
-            if (message.contains("unauthorized") || message.contains("invalid") || message.contains("not found")) {
-                res.status(401);
-                return gson.toJson(Map.of("message", "Error: unauthorized"));
-            }
-
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-
-
-        } catch (Exception e) {
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            response.status(500);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         }
     }
 }

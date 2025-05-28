@@ -2,10 +2,10 @@ package service.interfaces;
 
 import dataaccess.DataAccessException;
 import model.BasicResult;
-import model.CreateGameRequest;
-import model.CreateGameResult;
-import model.JoinGameRequest;
-import model.ListGamesResult;
+import model.request.CreateGameRequest;
+import model.result.CreateGameResult;
+import model.request.JoinGameRequest;
+import model.result.ListGamesResult;
 
 public interface GameService {
 

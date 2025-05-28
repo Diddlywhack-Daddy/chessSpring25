@@ -2,64 +2,40 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.CreateGameRequest;
-import model.CreateGameResult;
-import service.AuthService;
+import model.request.CreateGameRequest;
+import model.result.CreateGameResult;
+import model.GameData;
+import server.ErrorMessage;
+import server.exceptions.BadRequestException;
+import server.exceptions.UnauthorizedException;
 import service.GameService;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-
-import java.util.Map;
+import spark.*;
 
 public class CreateGameHandler implements Route {
-    private final Gson gson = new Gson();
     private final GameService gameService;
-    private final AuthService authService;
 
-    public CreateGameHandler(GameService gameService, AuthService authService) {
+    public CreateGameHandler(GameService gameService) {
         this.gameService = gameService;
-        this.authService = authService;
     }
 
     @Override
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
-
-        String authToken = req.headers("Authorization");
-        if (authToken == null || authToken.isBlank()) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
-        }
-
+    public Object handle(Request request, Response response) {
         try {
-            authService.validateToken(authToken);
+            String token = request.headers("authorization");
+            GameData gameData = new Gson().fromJson(request.body(), GameData.class);
+            CreateGameRequest gameRequest = new CreateGameRequest(token, gameData.gameName());
+            CreateGameResult result = gameService.createGame(gameRequest);
+            response.status(200);
+            return new Gson().toJson(result);
+        } catch (UnauthorizedException e) {
+            response.status(401);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
+        } catch (BadRequestException e) {
+            response.status(400);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         } catch (DataAccessException e) {
-            if (e.getMessage().toLowerCase().contains("unauthorized")) {
-                res.status(401);
-            } else {
-                res.status(500);
-            }
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-        }
-
-        try {
-            CreateGameRequest request = gson.fromJson(req.body(), CreateGameRequest.class);
-            if (request == null || request.gameName() == null || request.gameName().isBlank()) {
-                res.status(400);
-                return gson.toJson(Map.of("message", "Error: bad request"));
-            }
-
-            CreateGameResult result = gameService.createGame(request, authToken);
-            res.status(200);
-            return gson.toJson(result);
-
-        } catch (DataAccessException e) {
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            response.status(500);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         }
     }
 }

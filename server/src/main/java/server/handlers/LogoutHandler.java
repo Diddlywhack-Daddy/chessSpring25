@@ -2,52 +2,32 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import service.AuthService;
+import model.request.LogoutRequest;
+import server.ErrorMessage;
+import server.exceptions.UnauthorizedException;
 import service.UserService;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-
-import java.util.Map;
+import spark.*;
 
 public class LogoutHandler implements Route {
-    private final Gson gson = new Gson();
     private final UserService userService;
-    private final AuthService authService;
 
-    public LogoutHandler(UserService userService, AuthService authService) {
+    public LogoutHandler(UserService userService) {
         this.userService = userService;
-        this.authService = authService;
     }
 
     @Override
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
-
-        String authToken = req.headers("Authorization");
-        if (authToken == null || authToken.isBlank()) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
-        }
-
+    public Object handle(Request request, Response response) {
         try {
-            authService.validateToken(authToken);
-            userService.logout(authToken);
-
-            res.status(200);
-            return "{}";
-
+            String token = request.headers("authorization");
+            userService.logout(new LogoutRequest(token));
+            response.status(200);
+            return "";
+        } catch (UnauthorizedException e) {
+            response.status(401);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         } catch (DataAccessException e) {
-            String msg = e.getMessage().toLowerCase();
-            if (msg.contains("unauthorized") || msg.contains("invalid")) {
-                res.status(401);
-            } else {
-                res.status(500);
-            }
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-        } catch (Exception e) {
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            response.status(500);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         }
     }
 }

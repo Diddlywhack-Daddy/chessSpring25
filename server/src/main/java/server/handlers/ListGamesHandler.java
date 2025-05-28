@@ -2,59 +2,33 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.AuthData;
-import service.AuthService;
+import model.request.ListGamesRequest;
+import model.result.ListGamesResult;
+import server.ErrorMessage;
+import server.exceptions.UnauthorizedException;
 import service.GameService;
-import spark.Request;
-import spark.Response;
-import spark.Route;
-
-import java.util.Map;
+import spark.*;
 
 public class ListGamesHandler implements Route {
-    private final Gson gson = new Gson();
     private final GameService gameService;
-    private final AuthService authService;
 
-    public ListGamesHandler(GameService gameService, AuthService authService) {
+    public ListGamesHandler(GameService gameService) {
         this.gameService = gameService;
-        this.authService = authService;
     }
 
     @Override
-    public Object handle(Request req, Response res) {
-        res.type("application/json");
-
-        String authHeader = req.headers("authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
-        }
-        String authToken = authHeader.substring("Bearer ".length());
-        if (authToken == null || authToken.isBlank()) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
-        }
-
+    public Object handle(Request request, Response response) {
         try {
-            AuthData auth = authService.validateToken(authToken);
-            var result = gameService.listGames(auth.username());
-
-            res.status(200);
-            return gson.toJson(result);
-
+            String token = request.headers("authorization");
+            ListGamesResult result = gameService.listGames(new ListGamesRequest(token));
+            response.status(200);
+            return new Gson().toJson(result);
+        } catch (UnauthorizedException e) {
+            response.status(401);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         } catch (DataAccessException e) {
-            String msg = e.getMessage().toLowerCase();
-            if (msg.contains("unauthorized")) {
-                res.status(401);
-            } else {
-                res.status(500);
-            }
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
-
-        } catch (Exception e) {
-            res.status(500);
-            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            response.status(500);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
         }
     }
 }

@@ -3,6 +3,8 @@ package service;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
+import model.request.LoginRequest;
+import model.request.RegisterRequest;
 
 import java.util.UUID;
 

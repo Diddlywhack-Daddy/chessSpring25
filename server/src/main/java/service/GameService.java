@@ -3,6 +3,10 @@ package service;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import model.*;
+import model.request.CreateGameRequest;
+import model.request.JoinGameRequest;
+import model.result.CreateGameResult;
+import model.result.ListGamesResult;
 
 import java.util.ArrayList;
 import java.util.List;

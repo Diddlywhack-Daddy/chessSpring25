@@ -3,8 +3,8 @@ package service.interfaces;
 import dataaccess.DataAccessException;
 import model.AuthResult;
 import model.BasicResult;
-import model.LoginRequest;
-import model.RegisterRequest;
+import model.request.LoginRequest;
+import model.request.RegisterRequest;
 
 public interface UserService {
     AuthResult register(RegisterRequest req) throws DataAccessException;
