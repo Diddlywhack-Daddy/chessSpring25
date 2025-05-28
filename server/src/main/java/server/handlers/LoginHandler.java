@@ -36,8 +36,21 @@ public class LoginHandler implements Route {
             return gson.toJson(result);
 
         } catch (DataAccessException e) {
-            res.status(401);
-            return gson.toJson(Map.of("message", "Error: unauthorized"));
+            String message = e.getMessage().toLowerCase();
+
+            if (message.contains("connection") || message.contains("sql") || message.contains("database")) {
+                res.status(500);
+                return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+            }
+
+            if (message.contains("unauthorized") || message.contains("invalid") || message.contains("not found")) {
+                res.status(401);
+                return gson.toJson(Map.of("message", "Error: unauthorized"));
+            }
+
+            res.status(500);
+            return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
+
 
         } catch (Exception e) {
             res.status(500);

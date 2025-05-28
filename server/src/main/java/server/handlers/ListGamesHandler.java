@@ -25,13 +25,18 @@ public class ListGamesHandler implements Route {
     public Object handle(Request req, Response res) {
         res.type("application/json");
 
-        try {
-            String authToken = req.headers("Authorization");
-            if (authToken == null || authToken.isBlank()) {
-                res.status(401);
-                return gson.toJson(Map.of("message", "Error: unauthorized"));
-            }
+        String authHeader = req.headers("authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            res.status(401);
+            return gson.toJson(Map.of("message", "Error: unauthorized"));
+        }
+        String authToken = authHeader.substring("Bearer ".length());
+        if (authToken == null || authToken.isBlank()) {
+            res.status(401);
+            return gson.toJson(Map.of("message", "Error: unauthorized"));
+        }
 
+        try {
             AuthData auth = authService.validateToken(authToken);
             var result = gameService.listGames(auth.username());
 
@@ -39,7 +44,12 @@ public class ListGamesHandler implements Route {
             return gson.toJson(result);
 
         } catch (DataAccessException e) {
-            res.status(401);
+            String msg = e.getMessage().toLowerCase();
+            if (msg.contains("unauthorized")) {
+                res.status(401);
+            } else {
+                res.status(500);
+            }
             return gson.toJson(Map.of("message", "Error: " + e.getMessage()));
 
         } catch (Exception e) {

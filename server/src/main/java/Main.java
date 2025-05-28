@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import dataaccess.SqlDataAccess;
 import server.Server;
+import service.AuthService;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -34,7 +35,8 @@ public class Main {
         var userService = new UserService(dataAccess);
         var gameService = new GameService(dataAccess);
         var clearService = new ClearService(dataAccess);
-        var server = new Server(userService, gameService, clearService);
+        var authService = new AuthService(dataAccess);
+        var server = new Server(userService, gameService, clearService,authService);
 
         server.run(port);
 

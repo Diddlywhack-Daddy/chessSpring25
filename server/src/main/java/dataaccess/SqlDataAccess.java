@@ -43,10 +43,10 @@ public class SqlDataAccess implements DataAccess {
                             id INT PRIMARY KEY AUTO_INCREMENT,
                             name VARCHAR(255),
                             gameState TEXT,
-                            whiteUsername VARCHAR(255),
-                            blackUsername VARCHAR(255),
-                            FOREIGN KEY (whiteUsername) REFERENCES users(username),
-                            FOREIGN KEY (blackUsername) REFERENCES users(username)
+                            white VARCHAR(255),
+                            black VARCHAR(255),
+                            FOREIGN KEY (white) REFERENCES users(username),
+                            FOREIGN KEY (black) REFERENCES users(username)
                         )
                     """);
 
@@ -69,20 +69,7 @@ public class SqlDataAccess implements DataAccess {
     }
 
 
-    @Override
-    public void createUser(UserData user) throws DataAccessException {
-        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
-            stmt.setString(1, user.username());
-            stmt.setString(2, hashedPassword);
-            stmt.setString(3, user.email());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to create user", e);
-        }
-    }
+
 
     @Override
     public UserData getUser(String username) throws DataAccessException {
@@ -107,38 +94,29 @@ public class SqlDataAccess implements DataAccess {
 
     }
 
-    @Override
-    public void createAuth(AuthData auth) throws DataAccessException {
-        String sql = "INSERT INTO auth (token, username) VALUES (?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, auth.authToken());
-            stmt.setString(2, auth.username());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to create auth token", e);
-        }
-    }
-
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
+        System.out.println("Attempting to retrieve auth token: " + authToken);
+        System.out.println("Looking up token: " + authToken);
         String sql = "SELECT token, username FROM auth WHERE token = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, authToken);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new AuthData(rs.getString("token"), rs.getString("username"));
-
+                    System.out.println("Token found! User: " + rs.getString("username"));
+                    return new AuthData(rs.getString("username"), rs.getString("token"));
                 } else {
-                    return null; // No auth found
+                    System.out.println("Token NOT found.");
+                    throw new DataAccessException("Unauthorized");
                 }
             }
         } catch (SQLException e) {
             throw new DataAccessException("Failed to retrieve auth data", e);
         }
     }
+
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
@@ -152,12 +130,47 @@ public class SqlDataAccess implements DataAccess {
         }
     }
 
+
+    @Override
+    public void createUser(UserData user) throws DataAccessException {
+        System.out.println("Creating user: " + user.username());
+        String sql = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+            stmt.setString(1, user.username());
+            stmt.setString(2, hashedPassword);
+            stmt.setString(3, user.email());
+            stmt.executeUpdate();
+            System.out.println("User created successfully: " + user.username());
+        } catch (SQLException e) {
+            System.err.println("Error creating user: " + e.getMessage());
+            throw new DataAccessException("Failed to create user", e);
+        }
+    }
+
+    @Override
+    public void createAuth(AuthData auth) throws DataAccessException {
+        System.out.println("Creating auth token for user: " + auth.username());
+        String sql = "INSERT INTO auth (token, username) VALUES (?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, auth.authToken());
+            stmt.setString(2, auth.username());
+            stmt.executeUpdate();
+            System.out.println("Auth token created successfully: " + auth.authToken());
+        } catch (SQLException e) {
+            System.err.println("Error creating auth token: " + e.getMessage());
+            throw new DataAccessException("Failed to create auth token", e);
+        }
+    }
+
     @Override
     public int createGame(GameData game) throws DataAccessException {
-        String sql = "INSERT INTO games (name, gameState, whiteUsername, blackUsername) VALUES (?, ?, ?, ?)";
+        System.out.println("Creating game: " + game.gameName());
+        String sql = "INSERT INTO games (name, gameState, white, black) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
             stmt.setString(1, game.gameName());
             stmt.setString(2, game.game() != null ? game.game().serialize() : null);
             stmt.setString(3, game.whiteUsername());
@@ -166,12 +179,15 @@ public class SqlDataAccess implements DataAccess {
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    return generatedKeys.getInt(1);
+                    int gameId = generatedKeys.getInt(1);
+                    System.out.println("Game created with ID: " + gameId);
+                    return gameId;
                 } else {
                     throw new DataAccessException("Failed to retrieve game ID after insert");
                 }
             }
         } catch (SQLException e) {
+            System.err.println("Error creating game: " + e.getMessage());
             throw new DataAccessException("Failed to create game", e);
         }
     }
@@ -179,7 +195,7 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        String sql = "SELECT id, name, gameState, whiteUsername, blackUsername FROM games WHERE id = ?";
+        String sql = "SELECT id, name, gameState, white, black FROM games WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, gameID);
@@ -187,8 +203,8 @@ public class SqlDataAccess implements DataAccess {
                 if (rs.next()) {
                     String name = rs.getString("name");
                     String state = rs.getString("gameState");
-                    String white = rs.getString("whiteUsername");
-                    String black = rs.getString("blackUsername");
+                    String white = rs.getString("white");
+                    String black = rs.getString("black");
 
                     return new GameData(gameID, white, black, name, ChessGame.deserialize(state));
 
@@ -216,7 +232,7 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public GameData[] listGames() throws DataAccessException {
-        String sql = "SELECT id, name, gameState, whiteUsername, blackUsername FROM games";
+        String sql = "SELECT id, name, gameState, white, black FROM games";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -226,8 +242,8 @@ public class SqlDataAccess implements DataAccess {
                 int id = rs.getInt("id");
                 String name = rs.getString("name");
                 String state = rs.getString("gameState");
-                String white = rs.getString("whiteUsername");
-                String black = rs.getString("blackUsername");
+                String white = rs.getString("white");
+                String black = rs.getString("black");
                 ChessGame game = state != null ? ChessGame.deserialize(state) : null;
 
                 games.add(new GameData(id, white, black, name, game));

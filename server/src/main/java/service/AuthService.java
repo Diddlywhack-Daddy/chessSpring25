@@ -13,26 +13,26 @@ public class AuthService {
 
 
     public AuthData validateToken(String token) throws DataAccessException {
+        System.out.println("Validating token: " + token);
         if (token == null || token.isBlank()) {
-            throw new DataAccessException("Unauthorized"); // for 401
+            System.out.println("Token was null or blank.");
+            throw new DataAccessException("Unauthorized");
         }
 
         try {
             AuthData auth = db.getAuth(token);
-            if (auth == null) {
-                throw new DataAccessException("Unauthorized"); // for 401
-            }
+            System.out.println("Token validated for user: " + auth.username());
             return auth;
         } catch (DataAccessException e) {
+            System.out.println("Token validation failed: " + e.getMessage());
             if ("Unauthorized".equalsIgnoreCase(e.getMessage())) {
                 throw e;
-            } else {
-                throw new DataAccessException("Database failure", e); // 500
             }
-        } catch (Exception e) {
             throw new DataAccessException("Database failure", e);
         }
     }
+
+
 
 
 

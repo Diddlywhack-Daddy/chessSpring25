@@ -1,13 +1,16 @@
 package dataaccess;
 
-/**
- * Indicates there was an error connecting to the database
- */
-public class DataAccessException extends Exception{
-    public DataAccessException(String message) {
+import model.ErrorCode;
+
+public class DataAccessException extends Exception {
+    private final ErrorCode errorCode;
+
+    public DataAccessException(String message, ErrorCode errorCode) {
         super(message);
+        this.errorCode = errorCode;
     }
-    public DataAccessException(String message, Throwable ex) {
-        super(message, ex);
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 }
