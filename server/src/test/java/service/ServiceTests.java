@@ -40,8 +40,13 @@ public class ServiceTests {
         userService = new UserService(data);
     }
 
+    @BeforeEach
+    public void reset1() {
+        clearService.clear();
+    }
+
     @AfterEach
-    public void reset() {
+    public void reset2() {
         clearService.clear();
     }
 
