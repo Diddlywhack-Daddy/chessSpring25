@@ -6,6 +6,7 @@ import dataaccess.DataAccessException;
 import model.*;
 import model.request.CreateGameRequest;
 import model.request.JoinGameRequest;
+import model.request.ListGamesRequest;
 import model.result.CreateGameResult;
 import model.result.JoinGameResult;
 import model.result.ListGamesResult;
@@ -23,8 +24,9 @@ public class GameService implements service.interfaces.GameService {
     }
 
     @Override
-    public CreateGameResult createGame(CreateGameRequest request, String authToken)
+    public CreateGameResult createGame(CreateGameRequest request)
             throws DataAccessException, BadRequestException, UnauthorizedException {
+        String authToken = request.authToken();
         if (authToken == null || authToken.isBlank()) {
             throw new UnauthorizedException("Error: Unauthorized access.");
         }
@@ -45,9 +47,9 @@ public class GameService implements service.interfaces.GameService {
 
 
     @Override
-    public ListGamesResult listGames(String authToken)
+    public ListGamesResult listGames(ListGamesRequest listGamesRequest)
             throws DataAccessException, UnauthorizedException {
-
+        String authToken = listGamesRequest.authToken();
         if (authToken == null || authToken.isBlank()) {
             throw new UnauthorizedException("Error: Unauthorized access.");
         }
@@ -63,8 +65,9 @@ public class GameService implements service.interfaces.GameService {
 
 
     @Override
-    public JoinGameResult joinGame(JoinGameRequest request, String authToken)
+    public JoinGameResult joinGame(JoinGameRequest request)
             throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
+        String authToken = request.authToken();
 
         if (authToken == null || request == null || request.color() == null) {
             throw new BadRequestException("Error: Invalid request.");
@@ -100,8 +103,6 @@ public class GameService implements service.interfaces.GameService {
         GameData updatedGame = new GameData(game.gameID(), white, black, game.gameName(), game.game());
         data.updateGame(updatedGame);
 
-
-        data.updateGame(game);
         return new JoinGameResult();
     }
 }

@@ -20,7 +20,8 @@ public class ListGamesHandler implements Route {
     public Object handle(Request request, Response response) {
         try {
             String token = request.headers("authorization");
-            ListGamesResult result = gameService.listGames(token);
+            ListGamesRequest listGamesRequest = new ListGamesRequest(token);
+            ListGamesResult result = gameService.listGames(listGamesRequest);
             response.status(200);
             return new Gson().toJson(result);
         } catch (UnauthorizedException e) {

@@ -24,7 +24,7 @@ public class CreateGameHandler implements Route {
             String token = request.headers("authorization");
             GameData gameData = new Gson().fromJson(request.body(), GameData.class);
             CreateGameRequest gameRequest = new CreateGameRequest(token, gameData.gameName());
-            CreateGameResult result = gameService.createGame(gameRequest,token);
+            CreateGameResult result = gameService.createGame(gameRequest);
             response.status(200);
             return new Gson().toJson(result);
         } catch (UnauthorizedException e) {

@@ -22,7 +22,7 @@ public class JoinGameHandler implements Route {
             String token = request.headers("authorization");
             JoinGameRequest body = new Gson().fromJson(request.body(), JoinGameRequest.class);
             JoinGameRequest gameRequest = new JoinGameRequest(token, body.color(), body.gameID());
-            gameService.joinGame(gameRequest,token);
+            gameService.joinGame(gameRequest);
             response.status(200);
             return "";
         } catch (UnauthorizedException e) {
