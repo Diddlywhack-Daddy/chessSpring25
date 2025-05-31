@@ -3,6 +3,7 @@ package service;
 import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.SqlDataAccess;
 import model.*;
 import model.request.*;
 import model.result.CreateGameResult;
@@ -25,11 +26,15 @@ public class ServiceTests {
     static ClearService clearService;
     static GameService gameService;
     static UserService userService;
-    static MemoryDataAccess data;
+    static SqlDataAccess data;
 
     @BeforeAll
     public static void setup() {
-        data = new MemoryDataAccess();
+        try {
+            data = new SqlDataAccess();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         clearService = new ClearService(data);
         gameService = new GameService(data);
         userService = new UserService(data);
@@ -83,13 +88,13 @@ public class ServiceTests {
         assertThrows(Exception.class, () -> userService.logout("badToken"));
     }
 
-    /*@Test
+    @Test
     public void createGameSuccess() throws Exception {
         RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
         CreateGameRequest request = new CreateGameRequest(reg.authToken(), "Game1");
-        CreateGameResult result = gameService.createGame(request, reg.authToken());
+        CreateGameResult result = gameService.createGame(request);
         assertTrue(result.gameID() > 0);
-    }*/
+    }
 
     @Test
     public void createGameFail() {
@@ -98,23 +103,22 @@ public class ServiceTests {
     }
 
     @Test
-    public void ListGamesSuccess() throws AlreadyTakenException, DataAccessException, BadRequestException, UnauthorizedException {
+    public void listGamesSuccess() throws Exception {
         RegisterRequest registerRequest = new RegisterRequest("user", "pass", "mail@mail.com");
         RegisterResult registerResult = userService.register(registerRequest);
         String authToken1 = registerResult.authToken();
-        CreateGameRequest createGameRequest = new CreateGameRequest(authToken1, "Game1");
-        gameService.createGame(createGameRequest);
-        createGameRequest = new CreateGameRequest(authToken1, "Game2");
-        gameService.createGame(createGameRequest);
-        ListGamesRequest listGamesRequest = new ListGamesRequest(registerResult.authToken());
-        ListGamesResult listGamesResult = gameService.listGames(listGamesRequest);
 
-        Collection<GameData> games = new ArrayList<>();
-        games.add(new GameData(1, null, null, "Game1", new ChessGame()));
-        games.add(new GameData(2, null, null, "Game2", new ChessGame()));
-        ListGamesResult correctResult = new ListGamesResult(games);
-        assertEquals(correctResult, listGamesResult);
+        gameService.createGame(new CreateGameRequest(authToken1, "Game1"));
+        gameService.createGame(new CreateGameRequest(authToken1, "Game2"));
+
+        ListGamesResult listGamesResult = gameService.listGames(new ListGamesRequest(authToken1));
+        Collection<GameData> games = listGamesResult.games();
+
+        assertEquals(2, games.size());
+        assertTrue(games.stream().anyMatch(g -> g.gameName().equals("Game1")));
+        assertTrue(games.stream().anyMatch(g -> g.gameName().equals("Game2")));
     }
+
     @Test
     public void listGamesFail() {
         ListGamesRequest request = new ListGamesRequest("badToken");

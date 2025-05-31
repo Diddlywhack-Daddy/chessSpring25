@@ -40,7 +40,7 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid game name.");
         }
 
-        GameData newGame = new GameData(0, auth.username(), null, request.gameName(), new ChessGame());
+        GameData newGame = new GameData(0, null, null, request.gameName(), new ChessGame());
         int gameID = data.createGame(newGame);
         return new CreateGameResult(gameID);
     }

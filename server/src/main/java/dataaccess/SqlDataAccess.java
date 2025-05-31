@@ -40,17 +40,19 @@ public class SqlDataAccess implements DataAccess {
                 )
             """);
 
+
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS games (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    name VARCHAR(255),
-                    gameState TEXT,
-                    white VARCHAR(255),
-                    black VARCHAR(255),
-                    FOREIGN KEY (white) REFERENCES users(username),
-                    FOREIGN KEY (black) REFERENCES users(username)
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS games (
+                            id INT PRIMARY KEY AUTO_INCREMENT,
+                            name VARCHAR(255) NOT NULL,
+                            gameState TEXT,
+                            white VARCHAR(255),
+                            black VARCHAR(255),
+                            FOREIGN KEY (white) REFERENCES users(username),
+                            FOREIGN KEY (black) REFERENCES users(username)
+                            
+                        )
+                    """);
 
         } catch (SQLException e) {
             throw new DataAccessException("Error: initializing database tables", e);
@@ -61,9 +63,9 @@ public class SqlDataAccess implements DataAccess {
     public void clear() throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM games");
             stmt.executeUpdate("DELETE FROM auth");
             stmt.executeUpdate("DELETE FROM users");
-            stmt.executeUpdate("DELETE FROM games");
         } catch (SQLException e) {
             throw new DataAccessException("Error: failed to clear database", e);
         }
@@ -158,28 +160,44 @@ public class SqlDataAccess implements DataAccess {
 
     @Override
     public int createGame(GameData game) throws DataAccessException {
-        System.out.println("Creating game: " + game.gameName());
         String sql = "INSERT INTO games (name, gameState, white, black) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            System.out.println("DEBUG: Preparing to insert game: " + game.gameName());
+
             stmt.setString(1, game.gameName());
             stmt.setString(2, game.game() != null ? game.game().serialize() : null);
-            stmt.setString(3, game.whiteUsername());
-            stmt.setString(4, game.blackUsername());
-            stmt.executeUpdate();
 
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    int gameId = generatedKeys.getInt(1);
-                    System.out.println("Game created with ID: " + gameId);
-                    return gameId;
+            if (game.whiteUsername() != null) {
+                stmt.setString(3, game.whiteUsername());
+            } else {
+                stmt.setNull(3, Types.VARCHAR);
+            }
+
+            if (game.blackUsername() != null) {
+                stmt.setString(4, game.blackUsername());
+            } else {
+                stmt.setNull(4, Types.VARCHAR);
+            }
+
+            int affectedRows = stmt.executeUpdate();
+            System.out.println("DEBUG: Rows affected by insert: " + affectedRows);
+
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    int id = keys.getInt(1);
+                    System.out.println("DEBUG: Generated game ID: " + id);
+                    return id;
                 } else {
-                    throw new DataAccessException("Error: failed to retrieve game ID after insert");
+                    System.out.println("DEBUG: No generated key returned!");
+                    throw new DataAccessException("Failed to get auto-generated game ID");
                 }
             }
+
         } catch (SQLException e) {
-            throw new DataAccessException("Error: failed to create game", e);
+            System.out.println("DEBUG: SQLException: " + e.getMessage());
+            throw new DataAccessException("Failed to create game", e);
         }
     }
 
