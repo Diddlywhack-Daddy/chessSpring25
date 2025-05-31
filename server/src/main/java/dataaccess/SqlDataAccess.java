@@ -191,13 +191,13 @@ public class SqlDataAccess implements DataAccess {
                     return id;
                 } else {
                     System.out.println("DEBUG: No generated key returned!");
-                    throw new DataAccessException("Failed to get auto-generated game ID");
+                    throw new DataAccessException("Error: Failed to get auto-generated game ID");
                 }
             }
 
         } catch (SQLException e) {
             System.out.println("DEBUG: SQLException: " + e.getMessage());
-            throw new DataAccessException("Failed to create game", e);
+            throw new DataAccessException("Error: Failed to create game", e);
         }
     }
 

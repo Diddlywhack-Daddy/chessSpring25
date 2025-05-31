@@ -63,22 +63,26 @@ public class GameService implements service.interfaces.GameService {
         return new ListGamesResult(gameList);
     }
 
-
     @Override
     public JoinGameResult joinGame(JoinGameRequest request)
             throws DataAccessException, UnauthorizedException, BadRequestException, AlreadyTakenException {
-        String authToken = request.authToken();
 
-        if (authToken == null || request == null || request.color() == null) {
-            throw new BadRequestException("Error: Invalid request.");
+        if (request == null || request.authToken() == null) {
+            throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
-        AuthData auth = data.getAuth(authToken);
+        AuthData auth = data.getAuth(request.authToken());
+
         if (auth == null) {
             throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
+        if (request.color() == null) {
+            throw new BadRequestException("Error: Invalid request.");
+        }
+
         GameData game = data.getGame(request.gameID());
+
         if (game == null) {
             throw new BadRequestException("Error: Invalid request.");
         }
@@ -105,4 +109,7 @@ public class GameService implements service.interfaces.GameService {
 
         return new JoinGameResult();
     }
+
+
+
 }

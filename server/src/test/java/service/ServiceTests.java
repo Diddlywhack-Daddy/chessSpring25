@@ -41,14 +41,10 @@ public class ServiceTests {
     }
 
     @BeforeEach
-    public void reset1() {
+    public void reset() {
         clearService.clear();
     }
 
-    @AfterEach
-    public void reset2() {
-        clearService.clear();
-    }
 
     @Test
     public void clearSuccess() {
