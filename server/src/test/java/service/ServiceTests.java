@@ -126,7 +126,7 @@ public class ServiceTests {
     public void joinGameSuccess() throws Exception {
         RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
         CreateGameResult game = gameService.createGame(new CreateGameRequest(reg.authToken(), "Game1"));
-        JoinGameRequest join = new JoinGameRequest(reg.username(), ChessGame.TeamColor.WHITE, game.gameID());
+        JoinGameRequest join = new JoinGameRequest(reg.authToken(), ChessGame.TeamColor.WHITE, game.gameID());
         assertDoesNotThrow(() -> gameService.joinGame(join));
     }
 
