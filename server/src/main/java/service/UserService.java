@@ -66,7 +66,5 @@ public class UserService implements service.interfaces.UserService {
         return new LogoutResult();
     }
 
-    /* public String generateToken() {
-        return UUID.randomUUID().toString();
-    }*/
+    
 }
