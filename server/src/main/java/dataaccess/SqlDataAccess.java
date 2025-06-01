@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 
 
-
 public class SqlDataAccess implements DataAccess {
 
     public SqlDataAccess() throws DataAccessException {
@@ -25,20 +24,20 @@ public class SqlDataAccess implements DataAccess {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS users (
-                    username VARCHAR(255) PRIMARY KEY,
-                    password VARCHAR(255) NOT NULL,
-                    email VARCHAR(255)
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS users (
+                            username VARCHAR(255) PRIMARY KEY,
+                            password VARCHAR(255) NOT NULL,
+                            email VARCHAR(255)
+                        )
+                    """);
 
             statement.executeUpdate("""
-                CREATE TABLE IF NOT EXISTS auth (
-                    token VARCHAR(255) PRIMARY KEY,
-                    username VARCHAR(255),
-                    FOREIGN KEY (username) REFERENCES users(username)
-                )
-            """);
+                        CREATE TABLE IF NOT EXISTS auth (
+                            token VARCHAR(255) PRIMARY KEY,
+                            username VARCHAR(255),
+                            FOREIGN KEY (username) REFERENCES users(username)
+                        )
+                    """);
 
 
             statement.executeUpdate("""
@@ -206,24 +205,60 @@ public class SqlDataAccess implements DataAccess {
         String sql = "UPDATE games SET gameState = ?, white = ?, black = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+            System.out.println("Existing users in DB:");
+            for (UserData user : listUsers()) {
+                System.out.println("- " + user.username());
+            }
+
+            System.out.printf("updateGame: id=%d, white=%s, black=%s, name=%s%n",
+                    game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName());
             stmt.setString(1, game.game().serialize());
-            stmt.setString(2, game.whiteUsername());
-            stmt.setString(3, game.blackUsername());
+
+            if (game.whiteUsername() != null) {
+                stmt.setString(2, game.whiteUsername());
+            } else {
+                stmt.setNull(2, Types.VARCHAR);
+            }
+
+            if (game.blackUsername() != null) {
+                stmt.setString(3, game.blackUsername());
+            } else {
+                stmt.setNull(3, Types.VARCHAR);
+            }
+
             stmt.setInt(4, game.gameID());
-            stmt.executeUpdate();
+
+
+            System.out.printf("Updating game ID %d with white=%s, black=%s%n", game.gameID(), game.whiteUsername(), game.blackUsername());
+            int rowsUpdated = stmt.executeUpdate();
+            System.out.println("updateGame: rows updated = " + rowsUpdated);
+
+            System.out.printf("Saving game ID %d: white=%s, black=%s%n",
+                    game.gameID(), game.whiteUsername(), game.blackUsername());
+            System.out.println("Updated game white player: " + game.whiteUsername());
+
+
         } catch (SQLException e) {
             throw new DataAccessException("Error: failed to update game", e);
         }
     }
 
+
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
+        System.out.println("Attempting to fetch game with ID: " + gameID);
+
         String sql = "SELECT id, name, gameState, white, black FROM games WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, gameID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    System.out.println("Game found: ID = " + rs.getInt("id"));
+                    System.out.println("Fetched game white player: " + rs.getString("white"));
+                    System.out.printf("getGame: id=%d, white=%s, black=%s, name=%s%n",
+                            rs.getInt("id"), rs.getString("white"), rs.getString("black"), rs.getString("name"));
+
                     return new GameData(
                             rs.getInt("id"),
                             rs.getString("white"),
@@ -231,6 +266,8 @@ public class SqlDataAccess implements DataAccess {
                             rs.getString("name"),
                             ChessGame.deserialize(rs.getString("gameState"))
                     );
+                } else {
+                    System.out.println("No game found with ID: " + gameID);
                 }
                 return null;
             }

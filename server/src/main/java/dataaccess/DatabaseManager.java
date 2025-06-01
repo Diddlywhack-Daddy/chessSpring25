@@ -44,15 +44,20 @@ public class DatabaseManager {
      * </code>
      */
 
-    static Connection getConnection() throws DataAccessException {
+    public static Connection getConnection() throws DataAccessException {
         try {
-            var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
-            conn.setCatalog(databaseName);
+            if (databaseName == null) {
+                System.err.println("ERROR: databaseName is null");
+            }
+            Connection conn = DriverManager.getConnection(connectionUrl + "/" + databaseName, dbUsername, dbPassword);
+            System.out.println("DEBUG: Successfully connected to DB: " + databaseName);
             return conn;
         } catch (SQLException ex) {
+            ex.printStackTrace();
             throw new DataAccessException("Error: failed to get connection", ex);
         }
     }
+
 
     private static void loadPropertiesFromResources() {
         try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties")) {

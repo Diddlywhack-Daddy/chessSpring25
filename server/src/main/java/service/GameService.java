@@ -40,10 +40,17 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid game name.");
         }
 
-        GameData newGame = new GameData(0, null, null, request.gameName(), new ChessGame());
-        int gameID = data.createGame(newGame);
-        return new CreateGameResult(gameID);
+        ChessGame chessGame = new ChessGame();
+        GameData tempGame = new GameData(0, null, null, request.gameName(), chessGame);
+
+        int gameID = data.createGame(tempGame);
+
+
+        GameData createdGame = new GameData(gameID, null, null, request.gameName(), chessGame);
+
+        return new CreateGameResult(createdGame.gameID());
     }
+
 
 
     @Override
@@ -81,11 +88,21 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid request.");
         }
 
+        // 🔽 DEBUG: Print all games before fetching a specific one
+        System.out.println("=== Current Games in DB BEFORE getGame ===");
+        for (GameData g : data.listGames()) {
+            System.out.printf("GameID: %d, Name: %s, White: %s, Black: %s%n",
+                    g.gameID(), g.gameName(), g.whiteUsername(), g.blackUsername());
+        }
+
         GameData game = data.getGame(request.gameID());
 
         if (game == null) {
             throw new BadRequestException("Error: Invalid request.");
         }
+
+        // [rest of the method unchanged...]
+
 
         String username = auth.username();
         ChessGame.TeamColor color = request.color();
@@ -105,6 +122,9 @@ public class GameService implements service.interfaces.GameService {
         String white = (color == ChessGame.TeamColor.WHITE) ? username : game.whiteUsername();
         String black = (color == ChessGame.TeamColor.BLACK) ? username : game.blackUsername();
         GameData updatedGame = new GameData(game.gameID(), white, black, game.gameName(), game.game());
+        System.out.printf("joinGame: gameID=%d, white=%s, black=%s%n",
+                updatedGame.gameID(), updatedGame.whiteUsername(), updatedGame.blackUsername());
+
         data.updateGame(updatedGame);
 
         return new JoinGameResult();
