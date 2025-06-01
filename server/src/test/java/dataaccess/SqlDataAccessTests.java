@@ -156,6 +156,67 @@ public class SqlDataAccessTests {
         });
     }
 
+    @Test
+    public void createGameSuccess() throws DataAccessException {
+        ChessGame game = new ChessGame();
+        GameData gameData = new GameData(0, null, null, "Cool Chess Match", game);
+        int gameID = db.createGame(gameData);
+        assertTrue(gameID > 0, "Game ID should be a positive integer");
+    }
+
+    @Test
+    public void createGameFailure() {
+        GameData invalidGame = new GameData(0, null, null, null, null); // missing name
+        assertThrows(DataAccessException.class, () -> db.createGame(invalidGame));
+    }
+
+    @Test
+    public void getGameSuccess() throws DataAccessException {
+        ChessGame game = new ChessGame();
+        GameData newGame = new GameData(0, null, null, "Fetchable Game", game);
+        int gameID = db.createGame(newGame);
+
+        GameData fetched = db.getGame(gameID);
+        assertNotNull(fetched);
+        assertEquals("Fetchable Game", fetched.gameName());
+    }
+
+    @Test
+    public void getGameFailure() throws DataAccessException {
+        GameData game = db.getGame(99999); // assuming this ID does not exist
+        assertNull(game);
+    }
+
+    @Test
+    public void updateGameSuccess() throws DataAccessException {
+        // Setup: Create game and user
+        UserData white = new UserData("whitePlayer", "pw", "white@email.com");
+        UserData black = new UserData("blackPlayer", "pw", "black@email.com");
+        db.createUser(white);
+        db.createUser(black);
+
+        ChessGame game = new ChessGame();
+        GameData originalGame = new GameData(0, null, null, "To Be Updated", game);
+        int gameID = db.createGame(originalGame);
+
+        GameData updated = new GameData(gameID, white.username(), black.username(), "To Be Updated", game);
+        db.updateGame(updated);
+
+        GameData afterUpdate = db.getGame(gameID);
+        assertEquals("whitePlayer", afterUpdate.whiteUsername());
+        assertEquals("blackPlayer", afterUpdate.blackUsername());
+    }
+
+    @Test
+    public void updateGameFailure() throws DataAccessException {
+        ChessGame game = new ChessGame();
+        GameData fakeGame = new GameData(99999, "nobody", "noone", "Fake Game", game);
+        assertDoesNotThrow(() -> db.updateGame(fakeGame));
+
+        GameData result = db.getGame(99999);
+        assertNull(result, "Expected game to not exist after failed update");
+    }
+
 
 
 }

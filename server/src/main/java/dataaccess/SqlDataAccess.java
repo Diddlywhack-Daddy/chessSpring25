@@ -205,10 +205,6 @@ public class SqlDataAccess implements DataAccess {
         String sql = "UPDATE games SET gameState = ?, white = ?, black = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            System.out.println("Existing users in DB:");
-            for (UserData user : listUsers()) {
-                System.out.println("- " + user.username());
-            }
 
             System.out.printf("updateGame: id=%d, white=%s, black=%s, name=%s%n",
                     game.gameID(), game.whiteUsername(), game.blackUsername(), game.gameName());
@@ -277,23 +273,6 @@ public class SqlDataAccess implements DataAccess {
     }
 
 
-    public Collection<UserData> listUsers() throws DataAccessException {
-        List<UserData> users = new ArrayList<>();
-        String sql = "SELECT username, password, email FROM users";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                users.add(new UserData(
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("email")));
-            }
-            return users;
-        } catch (SQLException e) {
-            throw new DataAccessException("Error: failed to list users", e);
-        }
-    }
 
     @Override
     public GameData[] listGames() throws DataAccessException {
