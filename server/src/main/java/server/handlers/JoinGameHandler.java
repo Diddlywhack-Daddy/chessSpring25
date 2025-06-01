@@ -21,7 +21,7 @@ public class JoinGameHandler implements Route {
         try {
             String token = request.headers("authorization");
             JoinGameRequest body = new Gson().fromJson(request.body(), JoinGameRequest.class);
-            JoinGameRequest gameRequest = new JoinGameRequest(token, body.color(), body.gameID());
+            JoinGameRequest gameRequest = new JoinGameRequest(body.playerColor(), body.gameID(),token);
 
             gameService.joinGame(gameRequest);
 

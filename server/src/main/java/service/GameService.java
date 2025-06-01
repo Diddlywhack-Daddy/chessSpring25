@@ -84,7 +84,7 @@ public class GameService implements service.interfaces.GameService {
             throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
-        if (request.color() == null) {
+        if (request.playerColor() == null) {
             throw new BadRequestException("Error: Invalid request.");
         }
 
@@ -101,11 +101,9 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid request.");
         }
 
-        // [rest of the method unchanged...]
-
 
         String username = auth.username();
-        ChessGame.TeamColor color = request.color();
+        ChessGame.TeamColor color = request.playerColor();
 
         if (color == ChessGame.TeamColor.WHITE) {
             if (game.whiteUsername() != null && !game.whiteUsername().equals(username)) {

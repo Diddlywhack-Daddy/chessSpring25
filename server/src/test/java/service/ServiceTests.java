@@ -131,7 +131,7 @@ public class ServiceTests {
     public void joinGameSuccess() throws Exception {
         RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
         CreateGameResult game = gameService.createGame(new CreateGameRequest(reg.authToken(), "Game1"));
-        JoinGameRequest join = new JoinGameRequest(reg.authToken(), ChessGame.TeamColor.WHITE, game.gameID());
+        JoinGameRequest join = new JoinGameRequest(ChessGame.TeamColor.WHITE, game.gameID(), reg.authToken());
         assertDoesNotThrow(() -> gameService.joinGame(join));
     }
 
@@ -139,7 +139,7 @@ public class ServiceTests {
     public void joinGameFail() throws Exception {
         RegisterResult reg = userService.register(new RegisterRequest("test", "pass", "email@test.com"));
         CreateGameResult game = gameService.createGame(new CreateGameRequest(reg.authToken(), "Game1"));
-        JoinGameRequest join = new JoinGameRequest(reg.username(), null, game.gameID());
+        JoinGameRequest join = new JoinGameRequest(null,game.gameID(), reg.authToken());
         assertThrows(Exception.class, () -> gameService.joinGame(join));
     }
 }

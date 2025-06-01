@@ -42,9 +42,9 @@ public class UserService implements service.interfaces.UserService {
     }
 
     @Override
-    public LoginResult login(LoginRequest request) throws DataAccessException, UnauthorizedException {
+    public LoginResult login(LoginRequest request) throws DataAccessException, UnauthorizedException, BadRequestException {
         if (request.username() == null || request.password() == null) {
-            throw new UnauthorizedException("Error: Invalid username or password.");
+            throw new BadRequestException("Error: Missing username or password.");
         }
 
         UserData user = data.getUser(request.username());

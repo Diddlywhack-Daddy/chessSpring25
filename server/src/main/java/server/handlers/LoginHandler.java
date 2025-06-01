@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import model.request.LoginRequest;
 import model.result.LoginResult;
 import server.ErrorMessage;
+import server.exceptions.BadRequestException;
 import server.exceptions.UnauthorizedException;
 import service.UserService;
 import spark.*;
@@ -23,6 +24,10 @@ public class LoginHandler implements Route {
             LoginResult result = userService.login(loginRequest);
             response.status(200);
             return new Gson().toJson(result);
+        } catch (BadRequestException e) {
+            response.status(400);
+            return new Gson().toJson(new ErrorMessage(e.getMessage()));
+
         } catch (UnauthorizedException e) {
             response.status(401);
             return new Gson().toJson(new ErrorMessage(e.getMessage()));

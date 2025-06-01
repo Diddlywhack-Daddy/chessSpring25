@@ -12,6 +12,6 @@ import server.exceptions.UnauthorizedException;
 
 public interface UserService {
     RegisterResult register(RegisterRequest req) throws DataAccessException, BadRequestException, AlreadyTakenException;
-    LoginResult login(LoginRequest req) throws DataAccessException, UnauthorizedException;
+    LoginResult login(LoginRequest req) throws DataAccessException, UnauthorizedException, BadRequestException;
     LogoutResult logout(String authToken) throws Exception;
 }
