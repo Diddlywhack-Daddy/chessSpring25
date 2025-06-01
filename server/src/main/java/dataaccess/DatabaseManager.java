@@ -51,6 +51,7 @@ public class DatabaseManager {
                 System.err.println("ERROR: databaseName is null");
             }
             Connection conn = DriverManager.getConnection(connectionUrl + "/" + databaseName, dbUsername, dbPassword);
+            conn.setAutoCommit(true);
             System.out.println("DEBUG: Successfully connected to DB: " + databaseName);
             return conn;
         } catch (SQLException ex) {
