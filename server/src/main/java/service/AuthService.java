@@ -12,16 +12,5 @@ public class AuthService {
         this.db = db;
     }
 
-    public AuthData validateToken(String token) throws DataAccessException, UnauthorizedException {
-        if (token == null || token.isBlank()) {
-            throw new UnauthorizedException("Error: Unauthorized access.");
-        }
 
-        AuthData auth = db.getAuth(token);
-        if (auth == null) {
-            throw new UnauthorizedException("Error: Unauthorized access.");
-        }
-
-        return auth;
-    }
 }

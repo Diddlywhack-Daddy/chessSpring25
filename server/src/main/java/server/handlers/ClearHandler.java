@@ -23,7 +23,7 @@ public class ClearHandler implements Route {
 
         try {
             ClearResult result = service.clear();
-            if (result.Success()) {
+            if (result.success()) {
                 res.status(200);
                 return "{}";
             } else {

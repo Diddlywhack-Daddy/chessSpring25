@@ -1,4 +1,4 @@
 package model.result;
 
-public record ClearResult(boolean Success, String message) {
+public record ClearResult(boolean success, String message) {
 }
