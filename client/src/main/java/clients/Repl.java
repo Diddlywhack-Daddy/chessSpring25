@@ -1,8 +1,6 @@
 package clients;
 
-import clients.ChessClient;
-import clients.PostLoginClient;
-import clients.PreLoginClient;
+import clients.*;
 import ui.EscapeSequences;
 
 import java.util.Scanner;
@@ -20,11 +18,21 @@ public class Repl {
     }
 
     public void run() {
-
+        System.out.println("Welcome to chess.");
         Scanner scanner=new Scanner(System.in);
         var result="";
+        System.out.print(preLoginClient.help());
         while (!result.equals("quit")) {
+            String line = scanner.nextLine();
 
+
+            try {
+                result = preLoginClient.eval(line);
+                System.out.print(result);
+            } catch (Throwable e) {
+                var msg = e.toString();
+                System.out.print(msg);
+            }
         }
         System.out.println();
     }
@@ -46,6 +54,6 @@ public class Repl {
     }
 
     private void printPrompt() {
-        System.out.print("\n" + ">>> ");
+        System.out.print("\n" + ">>> " );
     }
 }

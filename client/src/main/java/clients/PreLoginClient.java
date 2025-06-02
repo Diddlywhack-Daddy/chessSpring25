@@ -25,11 +25,9 @@ public class PreLoginClient implements NotificationHandler{
             var cmd = (tokens.length > 0) ? tokens[0] : "help";
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
+                case "register" -> register(params);
+                case "login" -> login();
                 case "help" -> help();
-                case "logout" -> logout();
-                case "list" -> listGames(params);
-                case "play" -> playGame(params);
-                case "observe" -> observeGame(params);
                 case "quit" -> "quit";
                 default -> help();
             };
@@ -41,7 +39,17 @@ public class PreLoginClient implements NotificationHandler{
         }
     }
 
-    private String help() {
+    private String register(String[] params) {
+        String result = "Hit register";
+        return result;
+    }
+
+    private String login() {
+        String result = "Hit login";
+        return result;
+    }
+
+    public String help() {
         return """ 
                 Please choose one of the following options:
                 
@@ -53,21 +61,8 @@ public class PreLoginClient implements NotificationHandler{
 
     }
 
-    private String logout() {
-        return null;
-    }
 
-    private String listGames(String[] params) {
-        return null;
-    }
 
-    private String playGame(String[] params) {
-        return null;
-    }
-
-    private String observeGame(String[] params) {
-        return null;
-    }
 
     @Override
     public HandlerResult handleNotification(Notification notification, Object o) {
