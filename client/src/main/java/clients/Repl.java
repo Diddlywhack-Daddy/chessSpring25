@@ -29,6 +29,22 @@ public class Repl {
         System.out.println();
     }
 
+
+    //This will be my first layer, the prelogin repl
+    private void preLoginRepl(){
+
+    }
+
+    //This will be my second layer, postlogin repl. It is called by preLogin and uses break in the quit
+    private void postLoginRepl(){
+
+    }
+
+    //This is the last layer, the gameplay repl. It is called by postLogin and uses break in the quit
+    private void gameplayRepl(){
+
+    }
+
     private void printPrompt() {
         System.out.print("\n" + ">>> ");
     }
