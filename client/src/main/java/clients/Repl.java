@@ -12,11 +12,11 @@ public class Repl {
     private final PreLoginClient preLoginClient;
     private final PostLoginClient postLoginClient;
 
-    public Repl(String serverURL, ChessClient chessClient, PreLoginClient preLoginClient, PostLoginClient postLoginClient) {
+    public Repl(String serverURL) {
 
-        this.chessClient = chessClient;
-        this.preLoginClient = preLoginClient;
-        this.postLoginClient = postLoginClient;
+        this.chessClient = new ChessClient(serverURL);
+        this.preLoginClient = new PreLoginClient(serverURL);
+        this.postLoginClient = new PostLoginClient(serverURL);
     }
 
     public void run() {

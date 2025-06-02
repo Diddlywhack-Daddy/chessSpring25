@@ -1,25 +1,27 @@
 package clients;
 
 import backend.ServerFacade;
+import com.sun.nio.sctp.HandlerResult;
+import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
 
 import java.util.Arrays;
 
-public class ChessClient {
+public class ChessClient implements NotificationHandler{
     private final ServerFacade server;
 
     private final String serverUrl;
-    private final NotificationHandler notificationHandler;
 
 
-    public ChessClient(String serverUrl, NotificationHandler notificationHandler){
-        server = new ServerFacade(serverUrl);
+
+    public ChessClient(String serverUrl) {
         this.serverUrl = serverUrl;
-        this.notificationHandler = notificationHandler;
+        server = new ServerFacade(serverUrl);
+
     }
 
-    public String eval(String input){
-        try{
+    public String eval(String input) {
+        try {
             var tokens = input.toLowerCase().split(" ");
             var cmd = (tokens.length > 0) ? tokens[0] : "help";
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -31,9 +33,36 @@ public class ChessClient {
                 case "observe" -> observeGame(params);
                 case "quit" -> "quit";
                 default -> help();
+            };
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        catch (ResponseException ex) {
-            return ex.getMessage();
-        }
+    }
+
+    private String help() {
+        return null;
+    }
+
+    private String logout() {
+        return null;
+    }
+
+    private String listGames(String[] params) {
+        return null;
+    }
+
+    private String playGame(String[] params) {
+        return null;
+    }
+
+    private String observeGame(String[] params) {
+        return null;
+    }
+
+
+    @Override
+    public HandlerResult handleNotification(Notification notification, Object o) {
+        return null;
     }
 }
