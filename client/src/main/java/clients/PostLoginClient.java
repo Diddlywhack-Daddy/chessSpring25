@@ -28,7 +28,8 @@ public class PostLoginClient implements NotificationHandler{
             return switch (cmd) {
                 case "help" -> help();
                 case "logout" -> logout();
-                case "list" -> listGames(params);
+                case "listgames" -> listGames(params);
+                case "new" -> createGame(params);
                 case "play" -> playGame(params);
                 case "observe" -> observeGame(params);
                 case "quit" -> "quit";
@@ -40,25 +41,44 @@ public class PostLoginClient implements NotificationHandler{
         }
     }
 
+    private String createGame(String[] params) {
+        String result = "Hit createGame";
+        return result;
+    }
+
     private String observeGame(String[] params) {
-        return null;
+        String result = "Hit observeGame";
+        return result;
     }
 
 
     private String playGame(String[] params) {
-        return null;
+        String result = "Hit playGame";
+        return result;
     }
 
     private String listGames(String[] params) {
-        return null;
+        String result = "Hit listGames";
+        return result;
     }
 
     private String logout() {
-        return null;
+        String result = "Hit logout";
+        return result;
     }
 
-    private String help() {
-        return null;
+    public String help() {
+        return """ 
+                Please select one of the following options:
+                
+                help - lists possible commands
+                logout - logs out the user
+                listgames - displays a numbered list of all current games
+                new <gameName> -Creates a new Chess game
+                play <gameID> [WHITE or BLACK] - play chess
+                observe <gameID> - joins the specified game as a spectator
+                
+                """;
     }
 
 

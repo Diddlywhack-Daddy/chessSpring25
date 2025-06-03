@@ -45,8 +45,8 @@ public class PreLoginClient implements NotificationHandler{
     }
 
     private String login() {
-        String result = "Hit login";
-        return result;
+        //TODO: Add login logic
+        return "login";
     }
 
     public String help() {
@@ -57,6 +57,7 @@ public class PreLoginClient implements NotificationHandler{
                 login <USERNAME> <PASSWORD> - logs in to play chess
                 help - lists possible commands
                 quit - exits the program
+                
                 """;
 
     }
