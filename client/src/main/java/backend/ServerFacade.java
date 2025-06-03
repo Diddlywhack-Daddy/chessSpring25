@@ -1,5 +1,8 @@
 package backend;
 
+import model.request.LoginRequest;
+import model.result.LoginResult;
+
 public class ServerFacade {
 
 
@@ -10,8 +13,9 @@ public class ServerFacade {
 
     }
 
-    public void login(){
+    public LoginResult login(LoginRequest request){
 
+        return null;
     }
 
 

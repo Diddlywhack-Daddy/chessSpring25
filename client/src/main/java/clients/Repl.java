@@ -33,7 +33,7 @@ public class Repl {
             try {
                 result = preLoginClient.eval(line);
                 System.out.print(result);
-                if(result.equals("login")){
+                if(result.contains("Welcome,")){
                     postLoginRepl(scanner);
                 }
             } catch (Throwable e) {

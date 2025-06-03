@@ -4,6 +4,11 @@ import backend.ServerFacade;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
+import model.AuthData;
+import model.UserData;
+import model.request.LoginRequest;
+import model.result.LoginResult;
+import server.exceptions.BadRequestException;
 
 import java.util.Arrays;
 
@@ -26,7 +31,7 @@ public class PreLoginClient implements NotificationHandler{
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
             return switch (cmd) {
                 case "register" -> register(params);
-                case "login" -> login();
+                case "login" -> login(params);
                 case "help" -> help();
                 case "quit" -> "quit";
                 default -> help();
@@ -44,10 +49,23 @@ public class PreLoginClient implements NotificationHandler{
         return result;
     }
 
-    private String login() {
+    private String login(String[] params) throws BadRequestException {
         //TODO: Add login logic
-        return "login";
+        if (params.length == 2) {
+
+
+
+
+
+            UserData user = new UserData(params[0], params[1], null);
+            LoginResult result = server.login(new LoginRequest(user.username(), user.password()));
+            AuthData auth = new AuthData(result.username(), result.authToken());
+
+            return String.format("Welcome, %s!", result.username());
+        }
+        throw new BadRequestException("Expected: <username> <password>");
     }
+
 
     public String help() {
         return """ 

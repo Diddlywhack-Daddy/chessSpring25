@@ -64,7 +64,7 @@ public class PostLoginClient implements NotificationHandler{
 
     private String logout() {
         String result = "Hit logout";
-        return result;
+        return "quit";
     }
 
     public String help() {
