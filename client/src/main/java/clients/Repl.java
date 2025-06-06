@@ -3,13 +3,13 @@ package clients;
 import java.util.Scanner;
 
 public class Repl {
-    private final ChessClient chessClient;
+    private final GameClient gameClient;
     private final PreLoginClient preLoginClient;
     private final PostLoginClient postLoginClient;
 
     public Repl(String serverURL) {
 
-        this.chessClient = new ChessClient(serverURL);
+        this.gameClient = new GameClient(serverURL);
         this.preLoginClient = new PreLoginClient(serverURL);
         this.postLoginClient = new PostLoginClient(serverURL);
     }

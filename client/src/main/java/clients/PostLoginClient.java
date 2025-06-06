@@ -7,11 +7,12 @@ import com.sun.nio.sctp.NotificationHandler;
 
 import java.util.Arrays;
 
-public class PostLoginClient implements NotificationHandler {
+public class PostLoginClient extends Client implements NotificationHandler {
     private final ServerFacade server;
     private final String serverUrl;
 
     public PostLoginClient(String serverUrl) {
+        super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
     }

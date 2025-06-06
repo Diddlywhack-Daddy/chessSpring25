@@ -7,18 +7,21 @@ import com.sun.nio.sctp.NotificationHandler;
 import model.AuthData;
 import model.UserData;
 import model.request.LoginRequest;
+import model.request.RegisterRequest;
 import model.result.LoginResult;
+import model.result.RegisterResult;
 import server.exceptions.BadRequestException;
 
 import java.util.Arrays;
 
-public class PreLoginClient implements NotificationHandler{
+public class PreLoginClient extends Client implements NotificationHandler {
     private final ServerFacade server;
 
     private final String serverUrl;
 
 
     public PreLoginClient(String serverUrl) {
+        super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
 
@@ -42,9 +45,24 @@ public class PreLoginClient implements NotificationHandler{
         }
     }
 
-    private String register(String[] params) {
-        String result = "Hit register";
-        return result;
+    public String register(String[] params) {
+        if (params.length == 3) {
+            try {
+                assertNotEmpty(params);
+            } catch (BadRequestException e) {
+                throw new BadRequestException("Expected: <username> <password> <email>");
+            }
+            try {
+                user = new UserData(params[0], params[1], params[2]);
+                RegisterResult result = server.register
+                        (new RegisterRequest(user.username(), user.password(), user.email()));
+                auth = new AuthData(result.username(), result.authToken());
+                return String.format("Signed in as %s.", result.username());
+            } catch (BadRequestException e) {
+                throw new BadRequestException("Username already taken.");
+            }
+        }
+        throw new BadRequestException("Expected: <username> <password> <email>");
     }
 
     private String login(String[] params) throws BadRequestException {

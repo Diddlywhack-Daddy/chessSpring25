@@ -93,4 +93,7 @@ public class ServerFacade {
         }
         return response;
     }
+
+    public void clear() {
+    }
 }

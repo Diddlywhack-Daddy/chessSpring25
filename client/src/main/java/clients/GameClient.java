@@ -7,11 +7,12 @@ import com.sun.nio.sctp.NotificationHandler;
 
 import java.util.Arrays;
 
-public class ChessClient implements NotificationHandler {
+public class GameClient extends Client implements NotificationHandler {
     private final ServerFacade server;
     private final String serverUrl;
 
-    public ChessClient(String serverUrl) {
+    public GameClient(String serverUrl) {
+        super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
     }
