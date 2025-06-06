@@ -35,12 +35,10 @@ public class PreLoginClient implements NotificationHandler{
                 case "help" -> help();
                 case "quit" -> "quit";
                 default -> help();
+
             };
-
-
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (BadRequestException e) {
+            return e.getMessage();
         }
     }
 
@@ -79,7 +77,6 @@ public class PreLoginClient implements NotificationHandler{
                 """;
 
     }
-
 
 
 

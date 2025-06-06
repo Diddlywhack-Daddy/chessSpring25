@@ -7,38 +7,29 @@ import com.sun.nio.sctp.NotificationHandler;
 
 import java.util.Arrays;
 
-public class PostLoginClient implements NotificationHandler{
+public class PostLoginClient implements NotificationHandler {
     private final ServerFacade server;
-
     private final String serverUrl;
-
-
 
     public PostLoginClient(String serverUrl) {
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
-
     }
 
     public String eval(String input) {
-        try {
-            var tokens = input.toLowerCase().split(" ");
-            var cmd = (tokens.length > 0) ? tokens[0] : "help";
-            var params = Arrays.copyOfRange(tokens, 1, tokens.length);
-            return switch (cmd) {
-                case "help" -> help();
-                case "logout" -> logout();
-                case "listgames" -> listGames(params);
-                case "new" -> createGame(params);
-                case "play" -> playGame(params);
-                case "observe" -> observeGame(params);
-                case "quit" -> "quit";
-                default -> help();
-            };
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        var tokens = input.toLowerCase().split(" ");
+        var cmd = (tokens.length > 0) ? tokens[0] : "help";
+        var params = Arrays.copyOfRange(tokens, 1, tokens.length);
+        return switch (cmd) {
+            case "help" -> help();
+            case "logout" -> logout();
+            case "listgames" -> listGames(params);
+            case "new" -> createGame(params);
+            case "play" -> playGame(params);
+            case "observe" -> observeGame(params);
+            case "quit" -> "quit";
+            default -> help();
+        };
     }
 
     private String createGame(String[] params) {
@@ -50,7 +41,6 @@ public class PostLoginClient implements NotificationHandler{
         String result = "Hit observeGame";
         return result;
     }
-
 
     private String playGame(String[] params) {
         String result = "Hit playGame";
@@ -68,9 +58,9 @@ public class PostLoginClient implements NotificationHandler{
     }
 
     public String help() {
-        return """ 
+        return """
                 Please select one of the following options:
-                
+
                 help - lists possible commands
                 logout - logs out the user
                 listgames - displays a numbered list of all current games
@@ -80,7 +70,6 @@ public class PostLoginClient implements NotificationHandler{
                 
                 """;
     }
-
 
     @Override
     public HandlerResult handleNotification(Notification notification, Object o) {
