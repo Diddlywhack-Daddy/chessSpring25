@@ -49,21 +49,18 @@ public class PreLoginClient extends Client implements NotificationHandler {
         if (params.length == 3) {
             try {
                 assertNotEmpty(params);
-            } catch (BadRequestException e) {
-                throw new BadRequestException("Expected: <username> <password> <email>");
-            }
-            try {
                 user = new UserData(params[0], params[1], params[2]);
-                RegisterResult result = server.register
-                        (new RegisterRequest(user.username(), user.password(), user.email()));
+                RegisterRequest request = new RegisterRequest(user.username(), user.password(), user.email());
+                RegisterResult result = server.register(request); // Adjust this line if needed
                 auth = new AuthData(result.username(), result.authToken());
                 return String.format("Signed in as %s.", result.username());
             } catch (BadRequestException e) {
-                throw new BadRequestException("Username already taken.");
+                return e.getMessage();
             }
         }
-        throw new BadRequestException("Expected: <username> <password> <email>");
+        return "Expected: <username> <password> <email>";
     }
+
 
     private String login(String[] params) throws BadRequestException {
         //TODO: Add login logic
