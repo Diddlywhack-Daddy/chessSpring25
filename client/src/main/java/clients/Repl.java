@@ -32,9 +32,9 @@ public class Repl {
 
             try {
                 result = preLoginClient.eval(line);
-                System.out.print(result);
-                if(result.contains("Welcome,")){
+                if(result.equals("postLogin")){
                     postLoginRepl(scanner);
+                    System.out.print(preLoginClient.help());
                 }
             } catch (Throwable e) {
                 var msg = e.toString();
@@ -57,6 +57,7 @@ public class Repl {
                 System.out.print(result);
                 if(result == "login"){
                     postLoginRepl(scanner);
+                    System.out.print(postLoginClient.help());
                 }
             } catch (Throwable e) {
                 var msg = e.toString();
