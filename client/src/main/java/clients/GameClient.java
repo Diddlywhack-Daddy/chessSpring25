@@ -1,6 +1,7 @@
 package clients;
 
 import backend.ServerFacade;
+import chess.ChessGame;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
@@ -76,6 +77,10 @@ public class GameClient extends Client implements NotificationHandler {
     }
 
     private String observeGame(String[] params) {
+        return null;
+    }
+
+    public String printBoard(ChessGame.TeamColor white, ChessGame game){
         return null;
     }
 

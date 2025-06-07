@@ -48,7 +48,7 @@ public class Repl {
     private void postLoginRepl(Scanner scanner){
         var result="";
         System.out.print(postLoginClient.help());
-        while (!result.equals("quit")) {
+        while (!result.equals("loggedOut")) {
             String line = scanner.nextLine();
 
 
