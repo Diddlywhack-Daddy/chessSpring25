@@ -16,15 +16,12 @@ import java.util.Arrays;
 
 public class PreLoginClient extends Client implements NotificationHandler {
     private final ServerFacade server;
-
     private final String serverUrl;
-
 
     public PreLoginClient(String serverUrl) {
         super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
-
     }
 
     public String eval(String input) {
@@ -36,12 +33,11 @@ public class PreLoginClient extends Client implements NotificationHandler {
                 case "register" -> register(params);
                 case "login" -> login(params);
                 case "help" -> help();
-                case "quit" -> "quit";
+                case "quit" -> "quit\n";
                 default -> help();
-
             };
         } catch (BadRequestException e) {
-            return e.getMessage();
+            return e.getMessage() + "\n";
         }
     }
 
@@ -51,49 +47,41 @@ public class PreLoginClient extends Client implements NotificationHandler {
                 assertNotEmpty(params);
                 user = new UserData(params[0], params[1], params[2]);
                 RegisterRequest request = new RegisterRequest(user.username(), user.password(), user.email());
-                RegisterResult result = server.register(request); // Adjust this line if needed
-                auth = new AuthData(result.username(), result.authToken());
-                return String.format("Signed in as %s.", result.username());
+                RegisterResult result = server.register(request);
+                return String.format("Successfully registered %s. Please Log in.\n", result.username());
             } catch (BadRequestException e) {
-                return e.getMessage();
+                return e.getMessage() + "\n";
             }
         }
-        return "Expected: <username> <password> <email>";
+        return "Expected: <username> <password> <email>\n";
     }
-
 
     private String login(String[] params) throws BadRequestException {
-        //TODO: Add login logic
         if (params.length == 2) {
-
-
-
-
-
-            UserData user = new UserData(params[0], params[1], null);
+            try {
+                assertNotEmpty(params);
+            } catch (BadRequestException e) {
+                throw new BadRequestException("Expected: <username> <password>\n");
+            }
+            user = new UserData(params[0], params[1], null);
             LoginResult result = server.login(new LoginRequest(user.username(), user.password()));
-            AuthData auth = new AuthData(result.username(), result.authToken());
-
-            return String.format("Welcome, %s!", result.username());
+            auth = new AuthData(result.username(), result.authToken());
+            return String.format("Signed in as %s.\n", result.username());
         }
-        throw new BadRequestException("Expected: <username> <password>");
+        throw new BadRequestException("Expected: <username> <password>\n");
     }
-
 
     public String help() {
-        return """ 
-                Please choose one of the following options:
-                
-                register <USERNAME> <PASSWORD> <EMAIL> - creates an account
-                login <USERNAME> <PASSWORD> - logs in to play chess
-                help - lists possible commands
-                quit - exits the program
-                
-                """;
+        return """
+               Please choose one of the following options:
 
+               register <USERNAME> <PASSWORD> <EMAIL> - creates an account
+               login <USERNAME> <PASSWORD> - logs in to play chess
+               help - lists possible commands
+               quit - exits the program
+
+               """;
     }
-
-
 
     @Override
     public HandlerResult handleNotification(Notification notification, Object o) {

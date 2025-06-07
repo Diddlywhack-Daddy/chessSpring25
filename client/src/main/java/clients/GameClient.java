@@ -4,6 +4,7 @@ import backend.ServerFacade;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
+import server.exceptions.BadRequestException;
 
 import java.util.Arrays;
 
@@ -17,19 +18,45 @@ public class GameClient extends Client implements NotificationHandler {
         server = new ServerFacade(serverUrl);
     }
 
-    public String eval(String input) {
+    public String eval(String input) throws BadRequestException {
         var tokens = input.toLowerCase().split(" ");
         var cmd = (tokens.length > 0) ? tokens[0] : "help";
         var params = Arrays.copyOfRange(tokens, 1, tokens.length);
         return switch (cmd) {
-            case "help" -> help();
-            case "logout" -> logout();
-            case "list" -> listGames(params);
-            case "play" -> playGame(params);
-            case "observe" -> observeGame(params);
+            case "redraw" -> redraw();
+            case "highlight" -> highlight(params);
+            case "move" -> move(params);
+            case "observe" -> observe(params);
+            case "leave" -> leave();
+            case "resign" -> resign();
             case "quit" -> "quit";
+            case "clear" -> clear(params);
             default -> help();
         };
+    }
+
+    private String resign() {
+        return null;
+    }
+
+    private String leave() {
+        return null;
+    }
+
+    private String observe(String[] params) {
+        return null;
+    }
+
+    private String move(String[] params) {
+        return null;
+    }
+
+    private String highlight(String[] params) {
+        return null;
+    }
+
+    private String redraw() {
+        return null;
     }
 
     private String help() {
