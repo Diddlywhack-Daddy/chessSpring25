@@ -7,10 +7,13 @@ public class Repl {
     private final PreLoginClient preLoginClient;
     private final PostLoginClient postLoginClient;
 
+
+
     public Repl(String serverURL) {
         this.gameClient = new GameClient(serverURL);
         this.preLoginClient = new PreLoginClient(serverURL);
         this.postLoginClient = new PostLoginClient(serverURL);
+
     }
 
     public void run() {
@@ -30,6 +33,8 @@ public class Repl {
                 result = preLoginClient.eval(line);
                 System.out.println(result);
                 if (result.equals("postLogin")) {
+                    postLoginClient.setAuth(preLoginClient.user,preLoginClient.auth);
+                    postLoginClient.updateGameMapping();
                     postLoginRepl(scanner);
                     System.out.print(preLoginClient.help());
                 }

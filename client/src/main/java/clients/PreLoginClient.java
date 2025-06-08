@@ -65,9 +65,7 @@ public class PreLoginClient extends Client implements NotificationHandler {
             }
             user = new UserData(params[0], params[1], null);
             LoginResult result = server.login(new LoginRequest(user.username(), user.password()));
-            auth = new AuthData(result.username(), result.authToken());
-
-            System.out.printf("Signed in as %s.%n", result.username());
+            auth = new AuthData(result.authToken(),result.username());
             return "postLogin";
         }
         throw new BadRequestException("Expected: <username> <password>");

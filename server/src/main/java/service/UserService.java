@@ -54,6 +54,7 @@ public class UserService implements service.interfaces.UserService {
 
         String token = UUID.randomUUID().toString();
         data.createAuth(new AuthData(token, user.username()));
+        System.out.println("DEBUG: login returning token = " + token);
         return new LoginResult(user.username(), token);
     }
 

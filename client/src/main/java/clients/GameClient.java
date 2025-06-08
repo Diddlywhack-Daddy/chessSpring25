@@ -226,10 +226,56 @@ public class GameClient extends Client {
     }
 
 
+    private void drawBoard(PrintStream out, ChessGame game, ChessGame.TeamColor color, Collection<ChessMove> moves) {
+        Set<ChessPosition> highlights = new HashSet<>();
+        ChessPosition start = null;
+        for (ChessMove move : moves) {
+            highlights.add(move.getEndPosition());
+            start = move.getStartPosition();
+        }
+
+        List<Integer> rows = new ArrayList<>();
+        List<Character> cols = new ArrayList<>();
+        for (int r = 8; r >= 1; r--) rows.add(r);
+        for (char c = 'a'; c <= 'h'; c++) cols.add(c);
+        if (color == ChessGame.TeamColor.BLACK) {
+            Collections.reverse(rows);
+            Collections.reverse(cols);
+        }
+
+        for (int row : rows) {
+            setBorderColor(out);
+            out.print(" " + row + " ");
+            for (char colChar : cols) {
+                int col = colChar - 'a' + 1;
+                ChessPosition pos = new ChessPosition(row, col);
+
+                boolean isStart = start != null && start.equals(pos);
+                boolean isHighlight = highlights.contains(pos);
+                ChessPiece piece = game.getBoard().getPiece(pos);
+
+                printSquare(out, row, col, isStart, isHighlight, piece);
+            }
+            setBorderColor(out);
+            out.print(" " + row + " ");
+            resetColors(out);
+            out.println();
+        }
+    }
+
     private void resetColors(PrintStream out) {
         out.print(EscapeSequences.RESET_BG_COLOR);
         out.print(EscapeSequences.RESET_TEXT_COLOR);
     }
+
+    public void printBoard(ChessGame.TeamColor color, ChessGame game) {
+        PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        drawHeader(out, color);
+        drawBoard(out, game, color, new ArrayList<>());
+        drawHeader(out, color);
+    }
+
+
 
     private ChessPiece.PieceType convertStringToPiece(String piece) throws BadRequestException {
         return switch (piece.toLowerCase()) {

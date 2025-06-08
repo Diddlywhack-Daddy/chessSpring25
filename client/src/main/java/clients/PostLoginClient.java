@@ -2,20 +2,13 @@ package clients;
 
 import backend.ServerFacade;
 import chess.ChessGame;
-import chess.ChessMove;
-import chess.ChessPiece;
-import chess.ChessPosition;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
-import model.request.CreateGameRequest;
-import model.request.JoinGameRequest;
-import model.request.ListGamesRequest;
-import model.request.LogoutRequest;
-import server.exceptions.BadRequestException;
-
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
+import model.AuthData;
+import model.UserData;
+import model.request.*;
+import server.exceptions.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,7 +27,11 @@ public class PostLoginClient extends Client implements NotificationHandler {
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
         tempGame.getBoard().resetBoard();
-        updateGameMapping();
+    }
+
+    public void setAuth(UserData user, AuthData auth){
+        this.auth = auth;
+        this.user = user;
     }
 
     public String eval(String input) throws BadRequestException {
@@ -52,7 +49,7 @@ public class PostLoginClient extends Client implements NotificationHandler {
         };
     }
 
-    private void updateGameMapping() {
+    public void updateGameMapping() {
         try {
             var games = server.listGames(new ListGamesRequest(auth.authToken())).games();
             for (var game : games) {
@@ -67,13 +64,6 @@ public class PostLoginClient extends Client implements NotificationHandler {
         } catch (BadRequestException ignored) {}
     }
 
-    public void printBoard(ChessGame.TeamColor color, ChessGame game) {
-        PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        this.drawHeader(out, color);
-        Collection<ChessMove> moves = new ArrayList();
-        this.drawBoard(out, game, color, moves);
-        this.drawHeader(out, color);
-    }
 
     public String createGame(String... params) throws BadRequestException {
         assertAuthenticated();
@@ -120,18 +110,14 @@ public class PostLoginClient extends Client implements NotificationHandler {
         }
 
         int gameId = gameNumberToId.get(gameNumber);
-
-        // Join as observer (color = null)
-        server.joinGame(new JoinGameRequest(null, gameId, auth.authToken()));
-
-        // Prepare the client and assign the temporary game state
         gameClient = new GameClient(serverUrl);
-        gameClient.userColor = ChessGame.TeamColor.WHITE;
-        gameClient.game = tempGame;
 
-        gameClient.printBoard(gameClient.userColor, gameClient.game);
+        // TEMP: Manually simulate game state until WebSocket phase
+        game = new ChessGame(); // `game` is inherited from `Client`, so this sets state for GameClient
+        game.getBoard().resetBoard();
 
-        return String.format("You have joined game #%d as an observer.", gameNumber);
+        System.out.printf("You are observing game #%d.\n", gameNumber);
+        return "observe"; // Causes REPL to drop into gameplay mode
     }
 
 
@@ -156,6 +142,7 @@ public class PostLoginClient extends Client implements NotificationHandler {
 
     private String logout() throws BadRequestException {
         assertAuthenticated();
+        System.out.println("Logging out with token: " + auth.authToken());
         server.logout(new LogoutRequest(auth.authToken()));
         auth = null;
         return "loggedOut";
@@ -180,118 +167,7 @@ public class PostLoginClient extends Client implements NotificationHandler {
         }
     }
 
-    private void drawHeader(PrintStream out, ChessGame.TeamColor color) {
-        setBorderColor(out);
-        List<String> headers = Arrays.asList(" a ", "  b ", "  c ", " d ", "  e ", "  f ", " g ", "  h ");
-        if (color.equals(ChessGame.TeamColor.BLACK)) {
-            headers = headers.reversed();
-        }
 
-        out.print("   ");
-        Iterator var4 = headers.iterator();
-
-        while(var4.hasNext()) {
-            String c = (String)var4.next();
-            out.print(c);
-        }
-
-        out.print("   ");
-        resetColors(out);
-        out.println();
-    }
-
-    private void drawBoard(PrintStream out, ChessGame game, ChessGame.TeamColor color, Collection<ChessMove> moves) {
-        out.print("\u001b[38;5;15m");
-        List<String> rowNums = Arrays.asList(" 8 ", " 7 ", " 6 ", " 5 ", " 4 ", " 3 ", " 2 ", " 1 ");
-        ChessPiece[][] pieces = game.getBoard().getPieces();
-        Collection<ChessPosition> highlights = new ArrayList();
-        ChessPosition start = new ChessPosition(-1, -1);
-        Iterator var9 = moves.iterator();
-
-        while(var9.hasNext()) {
-            ChessMove move = (ChessMove)var9.next();
-            highlights.add(move.getEndPosition());
-            if (color == ChessGame.TeamColor.BLACK) {
-                start = new ChessPosition(move.getStartPosition().getRow() - 1, 8 - move.getStartPosition().getColumn());
-            } else {
-                start = new ChessPosition(8 - move.getStartPosition().getRow(), move.getStartPosition().getColumn() - 1);
-            }
-        }
-
-        int row;
-        ChessPiece[][] blackPieces;
-        if (color.equals(ChessGame.TeamColor.BLACK)) {
-            rowNums = rowNums.reversed();
-            row = 1;
-            blackPieces = new ChessPiece[8][8];
-
-            for(Iterator var11 = Arrays.stream(pieces).toList().iterator(); var11.hasNext(); ++row) {
-                ChessPiece[] row = (ChessPiece[])var11.next();
-                blackPieces[8 - row] = (ChessPiece[])Arrays.asList(row).reversed().toArray(new ChessPiece[8]);
-            }
-
-            pieces = blackPieces;
-            Collection<ChessPosition> newPositions = new ArrayList();
-            Iterator var27 = highlights.iterator();
-
-            while(var27.hasNext()) {
-                ChessPosition highlight = (ChessPosition)var27.next();
-                newPositions.add(new ChessPosition(highlight.getRow() - 1, 8 - highlight.getColumn()));
-            }
-
-            highlights = newPositions;
-        } else {
-            Collection<ChessPosition> newPositions = new ArrayList();
-            Iterator var23 = highlights.iterator();
-
-            while(var23.hasNext()) {
-                ChessPosition highlight = (ChessPosition)var23.next();
-                newPositions.add(new ChessPosition(8 - highlight.getRow(), highlight.getColumn() - 1));
-            }
-
-            highlights = newPositions;
-        }
-
-        row = 0;
-        blackPieces = pieces;
-        int var26 = pieces.length;
-
-        for(int var28 = 0; var28 < var26; ++var28) {
-            ChessPiece[] pieceRow = blackPieces[var28];
-            setBorderColor(out);
-            out.print((String)rowNums.get(row));
-            int index = 0;
-            ChessPiece[] var15 = pieceRow;
-            int var16 = pieceRow.length;
-
-            for(int var17 = 0; var17 < var16; ++var17) {
-                ChessPiece piece = var15[var17];
-                ChessPosition position = new ChessPosition(row, index);
-                if (highlights.contains(position)) {
-                    this.highlightPiece(out, index, row);
-                } else if (position.equals(start)) {
-                    out.print("\u001b[48;2;220;220;220m");
-                } else {
-                    this.drawPiece(out, index, row);
-                }
-
-                if (piece == null) {
-                    out.print("   ");
-                } else {
-                    out.print(this.getPiece(piece));
-                }
-
-                ++index;
-            }
-
-            setBorderColor(out);
-            out.print((String)rowNums.get(row));
-            resetColors(out);
-            out.println();
-            ++row;
-        }
-
-    }
 
 
     @Override
