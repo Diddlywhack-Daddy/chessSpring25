@@ -1,6 +1,8 @@
 package clients;
 
 import backend.ServerFacade;
+import com.sun.nio.sctp.HandlerResult;
+import com.sun.nio.sctp.Notification;
 import model.AuthData;
 import model.UserData;
 import chess.*;
@@ -40,29 +42,6 @@ public abstract class Client {
         }
     }
 
-    protected int convertHeaderToInt(String position) throws BadRequestException {
-        return switch (position.toLowerCase().charAt(0)) {
-            case 'a' -> 1;
-            case 'b' -> 2;
-            case 'c' -> 3;
-            case 'd' -> 4;
-            case 'e' -> 5;
-            case 'f' -> 6;
-            case 'g' -> 7;
-            case 'h' -> 8;
-            default -> throw new BadRequestException("Expected: <source> <destination> <optional: promotion>");
-        };
-    }
-
-    protected ChessPiece.PieceType convertStringToPiece(String piece) throws BadRequestException {
-        return switch (piece.toLowerCase()) {
-            case "queen" -> ChessPiece.PieceType.QUEEN;
-            case "rook" -> ChessPiece.PieceType.ROOK;
-            case "knight" -> ChessPiece.PieceType.KNIGHT;
-            case "bishop" -> ChessPiece.PieceType.BISHOP;
-            default -> throw new BadRequestException("Expected: <source> <destination> <optional: promotion>");
-        };
-    }
 
 
 
@@ -72,5 +51,10 @@ public abstract class Client {
                 throw new BadRequestException("Unexpected input.");
             }
         }
+    }
+
+
+    public HandlerResult handleNotification(Notification notification, Object o) {
+        return null;
     }
 }
