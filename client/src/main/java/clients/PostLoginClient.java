@@ -9,6 +9,8 @@ import model.AuthData;
 import model.UserData;
 import model.request.*;
 import server.exceptions.*;
+
+import java.io.Console;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -124,8 +126,11 @@ public class PostLoginClient extends Client implements NotificationHandler {
     public String listGames(String[] params) throws BadRequestException {
         assertAuthenticated();
         updateGameMapping();
-
         var games = server.listGames(new ListGamesRequest(auth.authToken())).games();
+        if(games.isEmpty()){
+            String result = "No created games";
+            return result;
+        }
         var result = new StringBuilder();
 
         for (var game : games) {
