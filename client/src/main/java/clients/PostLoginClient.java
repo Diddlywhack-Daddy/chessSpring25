@@ -2,11 +2,9 @@ package clients;
 
 import backend.ServerFacade;
 import chess.ChessGame;
-import com.google.gson.Gson;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
-import model.GameData;
 import model.request.CreateGameRequest;
 import model.request.JoinGameRequest;
 import model.request.ListGamesRequest;
@@ -19,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PostLoginClient extends Client implements NotificationHandler {
     private final ServerFacade server;
     private final String serverUrl;
-
     private final Map<Integer, Integer> gameNumberToId = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> reverseGameIdToNumber = new ConcurrentHashMap<>();
     private int nextGameNumber = 1;
@@ -59,107 +56,77 @@ public class PostLoginClient extends Client implements NotificationHandler {
                     nextGameNumber++;
                 }
             }
-        } catch (BadRequestException e) {
-            // Safe to ignore: no games yet or bad auth
-        }
+        } catch (BadRequestException ignored) {}
     }
 
     public String createGame(String... params) throws BadRequestException {
         assertAuthenticated();
-        try {
-            assertNotEmpty(params);
-        } catch (BadRequestException e) {
-            throw new BadRequestException("Expected: <gameName>");
-        }
+        assertNotEmpty(params);
 
         String name = String.join(" ", params);
-        try {
-            server.createGame(new CreateGameRequest(auth.authToken(), name));
-            updateGameMapping();
-            return String.format("%s created as game #%d.\n", name, lastCreatedGameNumber);
-        } catch (BadRequestException e) {
-            throw new BadRequestException(e.getMessage());
-        }
+        server.createGame(new CreateGameRequest(auth.authToken(), name));
+        updateGameMapping();
+        return String.format("%s created as game #%d.", name, lastCreatedGameNumber);
     }
 
     public String playGame(String... params) throws BadRequestException {
         assertAuthenticated();
+        assertNotEmpty(params);
+
         if (params.length == 2) {
-            try {
-                assertNotEmpty(params);
-            } catch (BadRequestException e) {
-                throw new BadRequestException("Expected: <gameNumber> [WHITE|BLACK]");
+            int gameNumber = Integer.parseInt(params[0]);
+            if (!gameNumberToId.containsKey(gameNumber)) {
+                throw new BadRequestException("Invalid game number. Run listgames to list valid numbers, or create a new game.");
             }
+            int gameId = gameNumberToId.get(gameNumber);
 
-            try {
-                int gameNumber = Integer.parseInt(params[0]);
-                if (!gameNumberToId.containsKey(gameNumber)) {
-                    throw new BadRequestException("Invalid game number. Run listgames to list valid numbers, or create a new game.");
-                }
-                int gameId = gameNumberToId.get(gameNumber);
+            ChessGame.TeamColor color = params[1].equalsIgnoreCase("white") ?
+                    ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
 
-                if (params[1].equalsIgnoreCase("white") || params[1].equalsIgnoreCase("black")) {
-                    ChessGame.TeamColor color = params[1].equalsIgnoreCase("white") ?
-                            ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-                    userColor = color;
-                    gameClient = new GameClient(serverUrl);
-                    server.joinGame(new JoinGameRequest(color, gameId, auth.authToken()));
+            userColor = color;
+            gameClient = new GameClient(serverUrl);
+            server.joinGame(new JoinGameRequest(color, gameId, auth.authToken()));
 
-                    System.out.printf("You have joined game #%d as %s\n", gameNumber, params[1].toUpperCase());
-                    return "play";
-                }
-            } catch (NumberFormatException e) {
-                throw new BadRequestException("Game number must be an integer.");
-            } catch (BadRequestException e) {
-                throw new BadRequestException("Spot already taken.");
-            }
+            System.out.printf("You have joined game #%d as %s.%n", gameNumber, params[1].toUpperCase());
+            return "play";
         }
+
         throw new BadRequestException("Expected: <gameNumber> [WHITE|BLACK]");
     }
 
     private String observeGame(String[] params) throws BadRequestException {
         assertAuthenticated();
-        if (params.length == 1) {
-            try {
-                assertNotEmpty(params);
-            } catch (BadRequestException e) {
-                throw new BadRequestException("Expected: <gameNumber>");
-            }
-            try {
-                int gameNumber = Integer.parseInt(params[0]);
-                if (!gameNumberToId.containsKey(gameNumber)) {
-                    throw new BadRequestException("Invalid game number. Run listgames to list valid numbers, or create a new game.");
-                }
-                int gameId = gameNumberToId.get(gameNumber);
-                gameClient = new GameClient(serverUrl);
-                gameClient.printBoard(ChessGame.TeamColor.WHITE, game);
-                return String.format("You have joined game #%d as an observer.\n", gameNumber);
-            } catch (NumberFormatException e) {
-                throw new BadRequestException("Game number must be an integer.");
-            }
+        assertNotEmpty(params);
+
+        int gameNumber = Integer.parseInt(params[0]);
+        if (!gameNumberToId.containsKey(gameNumber)) {
+            throw new BadRequestException("Invalid game number. Run listgames to list valid numbers, or create a new game.");
         }
-        throw new BadRequestException("Expected <gameNumber>");
+
+        int gameId = gameNumberToId.get(gameNumber);
+        gameClient = new GameClient(serverUrl);
+        gameClient.printBoard(ChessGame.TeamColor.WHITE, game);
+
+        return String.format("You have joined game #%d as an observer.", gameNumber);
     }
 
     public String listGames(String[] params) throws BadRequestException {
         assertAuthenticated();
         updateGameMapping();
-        try {
-            var games = server.listGames(new ListGamesRequest(auth.authToken())).games();
-            var result = new StringBuilder();
-            int i = 1;
-            for (var game : games) {
-                int gameId = game.gameID();
-                int gameNumber = reverseGameIdToNumber.get(gameId);
-                result.append(gameNumber).append(".  ");
-                result.append("Game name: ").append(game.gameName()).append("  ");
-                result.append("White: ").append(game.whiteUsername()).append("  ");
-                result.append("Black: ").append(game.blackUsername()).append('\n');
-            }
-            return result.toString();
-        } catch (BadRequestException e) {
-            throw new BadRequestException("No games yet. Create one.");
+
+        var games = server.listGames(new ListGamesRequest(auth.authToken())).games();
+        var result = new StringBuilder();
+
+        for (var game : games) {
+            int gameId = game.gameID();
+            int gameNumber = reverseGameIdToNumber.get(gameId);
+            result.append(gameNumber).append(". ");
+            result.append("Game name: ").append(game.gameName()).append(" | ");
+            result.append("White: ").append(game.whiteUsername()).append(" | ");
+            result.append("Black: ").append(game.blackUsername()).append("\n");
         }
+
+        return result.toString();
     }
 
     private String logout() throws BadRequestException {

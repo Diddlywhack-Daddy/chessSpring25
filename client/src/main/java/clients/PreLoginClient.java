@@ -33,11 +33,11 @@ public class PreLoginClient extends Client implements NotificationHandler {
                 case "register" -> register(params);
                 case "login" -> login(params);
                 case "help" -> help();
-                case "quit" -> "quit\n";
+                case "quit" -> "quit";
                 default -> help();
             };
         } catch (BadRequestException e) {
-            return e.getMessage() + "\n";
+            return e.getMessage();
         }
     }
 
@@ -48,12 +48,12 @@ public class PreLoginClient extends Client implements NotificationHandler {
                 user = new UserData(params[0], params[1], params[2]);
                 RegisterRequest request = new RegisterRequest(user.username(), user.password(), user.email());
                 RegisterResult result = server.register(request);
-                return String.format("Successfully registered %s. Please Log in.\n", result.username());
+                return String.format("Successfully registered %s. Please Log in.", result.username());
             } catch (BadRequestException e) {
-                return e.getMessage() + "\n";
+                return e.getMessage();
             }
         }
-        return "Expected: <username> <password> <email>\n";
+        return "Expected: <username> <password> <email>";
     }
 
     private String login(String[] params) throws BadRequestException {
@@ -61,18 +61,17 @@ public class PreLoginClient extends Client implements NotificationHandler {
             try {
                 assertNotEmpty(params);
             } catch (BadRequestException e) {
-                throw new BadRequestException("Expected: <username> <password>\n");
+                throw new BadRequestException("Expected: <username> <password>");
             }
             user = new UserData(params[0], params[1], null);
             LoginResult result = server.login(new LoginRequest(user.username(), user.password()));
             auth = new AuthData(result.username(), result.authToken());
 
-            System.out.printf("Signed in as %s.\n", result.username());
+            System.out.printf("Signed in as %s.%n", result.username());
             return "postLogin";
         }
-        throw new BadRequestException("Expected: <username> <password>\n");
+        throw new BadRequestException("Expected: <username> <password>");
     }
-
 
     public String help() {
         return """

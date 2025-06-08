@@ -19,66 +19,67 @@ public class Repl {
         preLoginRepl(scanner);
     }
 
-    // This is the first layer, the pre-login REPL
     private void preLoginRepl(Scanner scanner) {
         var result = "";
         System.out.print(preLoginClient.help());
         printPrompt();
+
         while (!result.equals("quit")) {
             String line = scanner.nextLine();
             try {
                 result = preLoginClient.eval(line);
+                System.out.println(result);
                 if (result.equals("postLogin")) {
                     postLoginRepl(scanner);
                     System.out.print(preLoginClient.help());
-                } else {
-                    System.out.print(result);
                 }
-                printPrompt();
             } catch (Throwable e) {
-                System.out.print(e.toString());
-                printPrompt();
+                System.out.println(e.getMessage());
             }
+
+            printPrompt();
         }
-        System.out.println();
     }
 
-    // This is the second layer, the post-login REPL
     private void postLoginRepl(Scanner scanner) {
         var result = "";
         System.out.print(postLoginClient.help());
         printPrompt();
+
         while (!result.equals("loggedOut")) {
             String line = scanner.nextLine();
             try {
                 result = postLoginClient.eval(line);
+                System.out.println(result);
                 if (result.equals("play") || result.equals("observe")) {
                     gameplayRepl(scanner);
                     System.out.print(postLoginClient.help());
-                } else {
-                    System.out.print(result);
                 }
-                printPrompt();
             } catch (Throwable e) {
-                System.out.print(e.toString());
-                printPrompt();
+                System.out.println(e.getMessage());
             }
-        }
-        System.out.println();
-    }
 
-    // This is the final layer, the gameplay REPL
-    private void gameplayRepl(Scanner scanner) {
-        // Placeholder for in-game interaction (move input, resign, redraw board, etc.)
-        System.out.println("Entered gameplay mode. Type 'resign' or 'exit' to leave game mode.");
-        printPrompt();
-        String command = "";
-        while (!command.equals("resign") && !command.equals("exit")) {
-            command = scanner.nextLine().trim().toLowerCase();
-            // TODO: Add actual gameplay command handling here
-            System.out.println("You entered: " + command);
             printPrompt();
         }
+    }
+
+    private void gameplayRepl(Scanner scanner) {
+        var result = "";
+        System.out.println("You are now in gameplay mode. Type 'leave' or 'resign' to exit.");
+        printPrompt();
+
+        while (!result.equals("quit") && !result.equals("leave") && !result.equals("resign")) {
+            String line = scanner.nextLine();
+            try {
+                result = gameClient.eval(line);
+                System.out.println(result);
+            } catch (Throwable e) {
+                System.out.println(e.getMessage());
+            }
+
+            printPrompt();
+        }
+
         System.out.println("Exited gameplay mode.");
     }
 
