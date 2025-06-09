@@ -10,14 +10,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class GameClient extends Client {
-
     private final ServerFacade server;
     private final String serverUrl;
+    protected ChessGame game;
+    protected ChessGame.TeamColor userColor;
 
     public GameClient(String serverUrl) {
         super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
+    }
+
+    public void setGameAndColor(ChessGame game, ChessGame.TeamColor color){
+        this.game = game;
+        this.userColor = color;
     }
 
     public String eval(String input) {
@@ -30,9 +36,16 @@ public class GameClient extends Client {
             case "move" -> move(params);
             case "leave" -> leave();
             case "resign" -> resign();
+            case "start" -> enterGameMode(); // New command added
             default -> help();
         };
     }
+
+    private String enterGameMode() {
+        drawBoardWithHighlights(userColor, game.getBoard(), new ArrayList<>());
+        return help();
+    }
+
 
     private String highlight(String[] params) {
         try {
@@ -59,7 +72,7 @@ public class GameClient extends Client {
         }
     }
 
-    private String redraw() {
+    public String redraw() {
         drawBoardWithHighlights(userColor, game.getBoard(), new ArrayList<>());
         return "";
     }
@@ -88,15 +101,15 @@ public class GameClient extends Client {
 
     private String leave() {
         game = null;
-        return "You left the game.";
+        return "leave";
     }
 
     private String resign() {
         game = null;
-        return "You resigned from the game.";
+        return "resign";
     }
 
-    private String help() {
+    public String help() {
         return """
                 Please choose one of the following options:
                 - highlight <position> (ex. G7)

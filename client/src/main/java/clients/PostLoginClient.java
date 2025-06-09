@@ -21,14 +21,16 @@ public class PostLoginClient extends Client implements NotificationHandler {
     private final Map<Integer, Integer> reverseGameIdToNumber = new ConcurrentHashMap<>();
     private int nextGameNumber = 1;
     private int lastCreatedGameNumber = -1;
+    private GameClient gameClient;
     private ChessGame tempGame = new ChessGame();  // temporary placeholder game
 
 
-    public PostLoginClient(String serverUrl) {
+    public PostLoginClient(String serverUrl, GameClient gameClient) {
         super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
         tempGame.getBoard().resetBoard();
+        this.gameClient = gameClient;
     }
 
     public void setAuth(UserData user, AuthData auth){
@@ -92,7 +94,8 @@ public class PostLoginClient extends Client implements NotificationHandler {
                     ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
 
             userColor = color;
-            gameClient = new GameClient(serverUrl);
+
+            gameClient.setGameAndColor(tempGame,color);
             server.joinGame(new JoinGameRequest(color, gameId, auth.authToken()));
 
             System.out.printf("You have joined game #%d as %s.%n", gameNumber, params[1].toUpperCase());

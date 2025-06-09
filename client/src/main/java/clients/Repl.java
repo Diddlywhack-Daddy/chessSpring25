@@ -12,7 +12,7 @@ public class Repl {
     public Repl(String serverURL) {
         this.gameClient = new GameClient(serverURL);
         this.preLoginClient = new PreLoginClient(serverURL);
-        this.postLoginClient = new PostLoginClient(serverURL);
+        this.postLoginClient = new PostLoginClient(serverURL,gameClient);
 
     }
 
@@ -70,7 +70,8 @@ public class Repl {
 
     private void gameplayRepl(Scanner scanner) {
         var result = "";
-        System.out.println("You are now in gameplay mode. Type 'leave' or 'resign' to exit.");
+        System.out.println(gameClient.help());
+        gameClient.redraw();
         printPrompt();
 
         while (!result.equals("quit") && !result.equals("leave") && !result.equals("resign")) {
