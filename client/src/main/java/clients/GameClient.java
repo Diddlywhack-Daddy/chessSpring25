@@ -3,12 +3,13 @@ package clients;
 import backend.ServerFacade;
 import chess.*;
 import server.exceptions.BadRequestException;
+
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+
 import chess.ChessGame.*;
 import chess.ChessPiece.PieceType;
-
 
 
 import java.util.*;
@@ -22,13 +23,14 @@ public class GameClient extends Client {
 
     private static final int BOARD_SIZE_IN_SQUARES = 10;
     private static final int SQUARE_SIZE_IN_PADDED_CHARS = 1;
+
     public GameClient(String serverUrl) {
         super(serverUrl);
         this.serverUrl = serverUrl;
         server = new ServerFacade(serverUrl);
     }
 
-    public void setGameAndColor(ChessGame game, ChessGame.TeamColor color){
+    public void setGameAndColor(ChessGame game, ChessGame.TeamColor color) {
         this.game = game;
         this.userColor = color;
     }
@@ -58,33 +60,31 @@ public class GameClient extends Client {
     }
 
 
-
     public String move(String... params) throws BadRequestException {
-        try {
-            if (params.length >= 2 && params.length <= 3) {
-                ChessPosition start = new ChessPosition(Integer.parseInt(String.valueOf(params[0].charAt(1))), this.convertHeaderToInt(params[0]));
-                ChessPosition end = new ChessPosition(Integer.parseInt(String.valueOf(params[1].charAt(1))), this.convertHeaderToInt(params[1]));
-                ChessPiece.PieceType promotionPiece;
-                if (params.length == 3) {
-                    promotionPiece = this.convertStringToPiece(params[2]);
-                } else {
-                    promotionPiece = null;
-                }
-
-                ChessMove move = new ChessMove(start, end, promotionPiece);
-                if (this.game.validMoves(start).contains(move)) {
-                // Make the move
-                    return "";
-                } else {
-                    throw new BadRequestException("Invalid move.");
-                }
+        if (params.length >= 2 && params.length <= 3) {
+            ChessPosition start = new ChessPosition(Integer.parseInt(String.valueOf(params[0].charAt(1))), this.convertHeaderToInt(params[0]));
+            ChessPosition end = new ChessPosition(Integer.parseInt(String.valueOf(params[1].charAt(1))), this.convertHeaderToInt(params[1]));
+            ChessPiece.PieceType promotionPiece;
+            if (params.length == 3) {
+                promotionPiece = this.convertStringToPiece(params[2]);
             } else {
-                throw new BadRequestException("Expected: <source> <destination> <optional: promotion>.");
+                promotionPiece = null;
             }
-        } catch (InvalidMoveException e) {
-            throw new BadRequestException(e.getMessage());
+
+            ChessMove move = new ChessMove(start, end, promotionPiece);
+            if (this.game.validMoves(start).contains(move)) {
+                // Make the move
+                return "";
+            } else {
+                throw new BadRequestException("Invalid move.");
+            }
+        } else {
+            throw new BadRequestException("Expected: <source> <destination> <optional: promotion>.");
         }
+
     }
+
+
 
     private String leave() {
         game = null;
@@ -121,14 +121,14 @@ public class GameClient extends Client {
         setBorderColor(out);
         List<String> headers = Arrays.asList(" a ", "  b ", "  c ", " d ", "  e ", "  f ", " g ", "  h ");
         if (color.equals(TeamColor.BLACK)) {
-            headers = headers.reversed();
+            Collections.reverse(headers);
         }
 
         out.print("   ");
         Iterator var4 = headers.iterator();
 
-        while(var4.hasNext()) {
-            String c = (String)var4.next();
+        while (var4.hasNext()) {
+            String c = (String) var4.next();
             out.print(c);
         }
 
@@ -145,8 +145,8 @@ public class GameClient extends Client {
         ChessPosition start = new ChessPosition(-1, -1);
         Iterator var9 = moves.iterator();
 
-        while(var9.hasNext()) {
-            ChessMove move = (ChessMove)var9.next();
+        while (var9.hasNext()) {
+            ChessMove move = (ChessMove) var9.next();
             highlights.add(move.getEndPosition());
             if (color == TeamColor.BLACK) {
                 start = new ChessPosition(move.getStartPosition().getRow() - 1, 8 - move.getStartPosition().getColumn());
@@ -158,7 +158,7 @@ public class GameClient extends Client {
         int row;
         ChessPiece[][] blackPieces;
         if (color.equals(TeamColor.BLACK)) {
-            rowNums = rowNums.reversed();
+            Collections.reverse(rowNums);
             ChessPiece[][] blackPiecesTemp = new ChessPiece[8][8];
 
             int rowIdx = 0;
@@ -178,14 +178,12 @@ public class GameClient extends Client {
                 newPositions.add(new ChessPosition(highlight.getRow() - 1, 8 - highlight.getColumn()));
             }
             highlights = newPositions;
-        }
-
-        else {
+        } else {
             Collection<ChessPosition> newPositions = new ArrayList();
             Iterator var23 = highlights.iterator();
 
-            while(var23.hasNext()) {
-                ChessPosition highlight = (ChessPosition)var23.next();
+            while (var23.hasNext()) {
+                ChessPosition highlight = (ChessPosition) var23.next();
                 newPositions.add(new ChessPosition(8 - highlight.getRow(), highlight.getColumn() - 1));
             }
 
@@ -196,15 +194,15 @@ public class GameClient extends Client {
         blackPieces = pieces;
         int var26 = pieces.length;
 
-        for(int var28 = 0; var28 < var26; ++var28) {
+        for (int var28 = 0; var28 < var26; ++var28) {
             ChessPiece[] pieceRow = blackPieces[var28];
             setBorderColor(out);
-            out.print((String)rowNums.get(row));
+            out.print((String) rowNums.get(row));
             int index = 0;
             ChessPiece[] var15 = pieceRow;
             int var16 = pieceRow.length;
 
-            for(int var17 = 0; var17 < var16; ++var17) {
+            for (int var17 = 0; var17 < var16; ++var17) {
                 ChessPiece piece = var15[var17];
                 ChessPosition position = new ChessPosition(row, index);
                 if (highlights.contains(position)) {
@@ -225,7 +223,7 @@ public class GameClient extends Client {
             }
 
             setBorderColor(out);
-            out.print((String)rowNums.get(row));
+            out.print((String) rowNums.get(row));
             resetColors(out);
             out.println();
             ++row;
@@ -267,52 +265,27 @@ public class GameClient extends Client {
         String var10000;
         if (piece.getTeamColor().equals(TeamColor.WHITE)) {
             switch (piece.getPieceType()) {
-                case KING:
-                    var10000 = " ♔ ";
-                    break;
-                case QUEEN:
-                    var10000 = " ♕ ";
-                    break;
-                case BISHOP:
-                    var10000 = " ♗ ";
-                    break;
-                case KNIGHT:
-                    var10000 = " ♘ ";
-                    break;
-                case ROOK:
-                    var10000 = " ♖ ";
-                    break;
-                case PAWN:
-                    var10000 = " ♙ ";
-                    break;
-                default:
-                    throw new MatchException((String)null, (Throwable)null);
+                case KING -> var10000 = " ♔ ";
+                case QUEEN -> var10000 = " ♕ ";
+                case BISHOP -> var10000 = " ♗ ";
+                case KNIGHT -> var10000 = " ♘ ";
+                case ROOK -> var10000 = " ♖ ";
+                case PAWN -> var10000 = " ♙ ";
+                default -> {
+                    var10000 = " ? ";
+                }
             }
 
             return var10000;
         } else {
-            switch (piece.getPieceType()) {
-                case KING:
-                    var10000 = " ♚ ";
-                    break;
-                case QUEEN:
-                    var10000 = " ♛ ";
-                    break;
-                case BISHOP:
-                    var10000 = " ♝ ";
-                    break;
-                case KNIGHT:
-                    var10000 = " ♞ ";
-                    break;
-                case ROOK:
-                    var10000 = " ♜ ";
-                    break;
-                case PAWN:
-                    var10000 = " ♟ ";
-                    break;
-                default:
-                    throw new MatchException((String)null, (Throwable)null);
-            }
+            var10000 = switch (piece.getPieceType()) {
+                case KING -> " ♚ ";
+                case QUEEN -> " ♛ ";
+                case BISHOP -> " ♝ ";
+                case KNIGHT -> " ♞ ";
+                case ROOK -> " ♜ ";
+                case PAWN -> " ♟ ";
+            };
 
             return var10000;
         }
@@ -342,11 +315,11 @@ public class GameClient extends Client {
             } else {
                 String col = String.valueOf(params[0].charAt(1));
                 ChessPosition position = new ChessPosition(Integer.parseInt(col), this.convertHeaderToInt(params[0]));
-                Collection<ChessMove> moves = this.game.validMoves(position);
+                Collection<ChessMove> moves = game.validMoves(position);
                 if (moves.isEmpty()) {
                     throw new BadRequestException("This piece cannot move.");
                 } else {
-                    this.gameClient.highlight(this.userColor, this.game, moves);
+                    highlight(userColor, game, moves);
                     return "";
                 }
             }
@@ -354,6 +327,7 @@ public class GameClient extends Client {
             throw new BadRequestException("There is no piece at this location.");
         }
     }
+
     private int convertHeaderToInt(String position) throws BadRequestException {
         byte var10000;
         switch (position.toLowerCase().charAt(0)) {
@@ -410,11 +384,11 @@ public class GameClient extends Client {
         return var10000;
     }
 
-    private String redraw() throws BadRequestException {
-        if (this.userColor == ChessGame.TeamColor.BLACK) {
-            this.gameClient.printBoard(TeamColor.BLACK, this.game);
+    public String redraw() throws BadRequestException {
+        if (userColor == ChessGame.TeamColor.BLACK) {
+            printBoard(TeamColor.BLACK, game);
         } else {
-            this.gameClient.printBoard(TeamColor.WHITE, this.game);
+            printBoard(TeamColor.WHITE, game);
         }
 
         return "";

@@ -1,5 +1,7 @@
 package clients;
 
+import server.exceptions.BadRequestException;
+
 import java.util.Scanner;
 
 public class Repl {
@@ -71,7 +73,13 @@ public class Repl {
     private void gameplayRepl(Scanner scanner) {
         var result = "";
         System.out.println(gameClient.help());
-        gameClient.redraw();
+
+        try {
+            gameClient.redraw();
+        } catch (BadRequestException e) {
+            System.out.println("Error drawing board: " + e.getMessage());
+        }
+
         printPrompt();
 
         while (!result.equals("quit") && !result.equals("leave") && !result.equals("resign")) {
@@ -88,6 +96,7 @@ public class Repl {
 
         System.out.println("Exited gameplay mode.");
     }
+
 
     private void printPrompt() {
         System.out.print("\n>>> ");

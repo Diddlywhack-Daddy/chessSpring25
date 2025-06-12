@@ -25,7 +25,7 @@ public class PreLoginClient extends Client implements NotificationHandler {
     }
 
     public String eval(String input) {
-        try {
+
             var tokens = input.toLowerCase().split(" ");
             var cmd = (tokens.length > 0) ? tokens[0] : "help";
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
@@ -36,9 +36,7 @@ public class PreLoginClient extends Client implements NotificationHandler {
                 case "quit" -> "quit";
                 default -> help();
             };
-        } catch (BadRequestException e) {
-            return e.getMessage();
-        }
+
     }
 
     public String register(String[] params) {
