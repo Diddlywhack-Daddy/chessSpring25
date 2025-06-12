@@ -284,7 +284,7 @@ public class GameClient extends Client {
                 case BISHOP -> " ♝ ";
                 case KNIGHT -> " ♞ ";
                 case ROOK -> " ♜ ";
-                case PAWN -> " ♟ ";
+                case PAWN -> "\u0020\u265f\u202f";
             };
 
             return var10000;
