@@ -178,17 +178,21 @@ public class GameClient extends Client {
                 newPositions.add(new ChessPosition(highlight.getRow() - 1, 8 - highlight.getColumn()));
             }
             highlights = newPositions;
-        } else {
-            Collection<ChessPosition> newPositions = new ArrayList();
-            Iterator var23 = highlights.iterator();
 
-            while (var23.hasNext()) {
-                ChessPosition highlight = (ChessPosition) var23.next();
+        } else {
+            ChessPiece[][] whitePieces = new ChessPiece[8][8];
+            for (int r = 0; r < 8; r++) {
+                whitePieces[r] = pieces[7 - r];
+            }
+            pieces = whitePieces;
+
+            Collection<ChessPosition> newPositions = new ArrayList<>();
+            for (ChessPosition highlight : highlights) {
                 newPositions.add(new ChessPosition(8 - highlight.getRow(), highlight.getColumn() - 1));
             }
-
             highlights = newPositions;
         }
+
 
         row = 0;
         blackPieces = pieces;
@@ -264,6 +268,7 @@ public class GameClient extends Client {
     private String getPiece(ChessPiece piece) {
         String var10000;
         if (piece.getTeamColor().equals(TeamColor.WHITE)) {
+
             switch (piece.getPieceType()) {
                 case KING -> var10000 = " ♔ ";
                 case QUEEN -> var10000 = " ♕ ";
