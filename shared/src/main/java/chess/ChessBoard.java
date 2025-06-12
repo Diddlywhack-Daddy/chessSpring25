@@ -43,6 +43,10 @@ public class ChessBoard {
         resetFrontRanks();
         resetBackRanks();
     }
+
+    public ChessPiece[][] getPieces() {
+        return board;
+    }
     public ChessBoard cloneBoard(){
         ChessBoard newBoard = new ChessBoard();
         for(int r=1;r<=8;r++){

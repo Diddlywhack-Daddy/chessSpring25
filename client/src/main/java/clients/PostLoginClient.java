@@ -38,20 +38,24 @@ public class PostLoginClient extends Client implements NotificationHandler {
         this.user = user;
     }
 
-    public String eval(String input) throws BadRequestException {
-        var tokens = input.toLowerCase().split(" ");
-        var cmd = (tokens.length > 0) ? tokens[0] : "help";
-        var params = Arrays.copyOfRange(tokens, 1, tokens.length);
-        return switch (cmd) {
-            case "help" -> help();
-            case "logout" -> logout();
-            case "listgames" -> listGames(params);
-            case "new" -> createGame(params);
-            case "play" -> playGame(params);
-            case "observe" -> observeGame(params);
-            default -> help();
-        };
+    public String eval(String input) {
+        try {
+            var tokens = input.toLowerCase().split(" ");
+            var cmd = (tokens.length > 0) ? tokens[0] : "help";
+            var params = Arrays.copyOfRange(tokens, 1, tokens.length);
+            return switch (cmd) {
+                case "logout" -> logout();
+                case "listgames" -> listGames(params);
+                case "new" -> createGame(params);
+                case "play" -> playGame(params);
+                case "observe" -> observeGame(params);
+                default -> help();
+            };
+        } catch (BadRequestException e) {
+            return e.getMessage();
+        }
     }
+
 
     public void updateGameMapping() {
         try {
@@ -115,7 +119,7 @@ public class PostLoginClient extends Client implements NotificationHandler {
         }
 
         int gameId = gameNumberToId.get(gameNumber);
-        gameClient = new GameClient(serverUrl);
+
 
         // TEMP: Manually simulate game state until WebSocket phase
         game = new ChessGame(); // `game` is inherited from `Client`, so this sets state for GameClient

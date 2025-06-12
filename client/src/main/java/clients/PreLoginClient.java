@@ -56,19 +56,19 @@ public class PreLoginClient extends Client implements NotificationHandler {
         return "Expected: <username> <password> <email>";
     }
 
-    private String login(String[] params) throws BadRequestException {
-        if (params.length == 2) {
-            try {
-                assertNotEmpty(params);
-            } catch (BadRequestException e) {
-                throw new BadRequestException("Expected: <username> <password>");
-            }
+    private String login(String[] params) {
+        if (params.length != 2) {
+            return "Expected: <username> <password>";
+        }
+        try {
+            assertNotEmpty(params);
             user = new UserData(params[0], params[1], null);
             LoginResult result = server.login(new LoginRequest(user.username(), user.password()));
-            auth = new AuthData(result.authToken(),result.username());
+            auth = new AuthData(result.authToken(), result.username());
             return "postLogin";
+        } catch (BadRequestException e) {
+            return e.getMessage();
         }
-        throw new BadRequestException("Expected: <username> <password>");
     }
 
     public String help() {

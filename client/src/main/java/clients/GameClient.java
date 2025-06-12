@@ -3,11 +3,16 @@ package clients;
 import backend.ServerFacade;
 import chess.*;
 import server.exceptions.BadRequestException;
-import ui.EscapeSequences;
-
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import chess.ChessGame.*;
+import chess.ChessPiece.PieceType;
+
+
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GameClient extends Client {
     private final ServerFacade server;
@@ -15,6 +20,8 @@ public class GameClient extends Client {
     protected ChessGame game;
     protected ChessGame.TeamColor userColor;
 
+    private static final int BOARD_SIZE_IN_SQUARES = 10;
+    private static final int SQUARE_SIZE_IN_PADDED_CHARS = 1;
     public GameClient(String serverUrl) {
         super(serverUrl);
         this.serverUrl = serverUrl;
@@ -27,75 +34,55 @@ public class GameClient extends Client {
     }
 
     public String eval(String input) {
-        var tokens = input.toLowerCase().split(" ");
-        var cmd = (tokens.length > 0) ? tokens[0] : "help";
-        var params = Arrays.copyOfRange(tokens, 1, tokens.length);
-        return switch (cmd) {
-            case "highlight" -> highlight(params);
-            case "redraw" -> redraw();
-            case "move" -> move(params);
-            case "leave" -> leave();
-            case "resign" -> resign();
-            case "start" -> enterGameMode(); // New command added
-            default -> help();
-        };
+        try {
+            var tokens = input.toLowerCase().split(" ");
+            var cmd = (tokens.length > 0) ? tokens[0] : "help";
+            var params = Arrays.copyOfRange(tokens, 1, tokens.length);
+            return switch (cmd) {
+                case "highlight" -> highlight(params);
+                case "redraw" -> redraw();
+                case "move" -> move(params);
+                case "leave" -> leave();
+                case "resign" -> resign();
+                case "start" -> enterGameMode();
+                default -> help();
+            };
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
     }
 
+
     private String enterGameMode() {
-        drawBoardWithHighlights(userColor, game.getBoard(), new ArrayList<>());
         return help();
     }
 
 
-    private String highlight(String[] params) {
+
+    public String move(String... params) throws BadRequestException {
         try {
-            if (params.length != 1) {
-                throw new BadRequestException("Expected <position>");
-            }
+            if (params.length >= 2 && params.length <= 3) {
+                ChessPosition start = new ChessPosition(Integer.parseInt(String.valueOf(params[0].charAt(1))), this.convertHeaderToInt(params[0]));
+                ChessPosition end = new ChessPosition(Integer.parseInt(String.valueOf(params[1].charAt(1))), this.convertHeaderToInt(params[1]));
+                ChessPiece.PieceType promotionPiece;
+                if (params.length == 3) {
+                    promotionPiece = this.convertStringToPiece(params[2]);
+                } else {
+                    promotionPiece = null;
+                }
 
-            ChessPosition position = parsePosition(params[0]);
-            ChessPiece piece = game.getBoard().getPiece(position);
-
-            if (piece == null) {
-                throw new BadRequestException("There is no piece at this location.");
-            }
-
-            Collection<ChessMove> moves = game.validMoves(position);
-            if (moves.isEmpty()) {
-                throw new BadRequestException("This piece cannot move.");
-            }
-
-            drawBoardWithHighlights(userColor, game.getBoard(), moves);
-            return "";
-        } catch (BadRequestException e) {
-            return e.getMessage();
-        }
-    }
-
-    public String redraw() {
-        drawBoardWithHighlights(userColor, game.getBoard(), new ArrayList<>());
-        return "";
-    }
-
-    private String move(String[] params) {
-        try {
-            if (params.length < 2 || params.length > 3) {
-                throw new BadRequestException("Expected: <source> <destination> <optional: promotion>");
-            }
-
-            ChessPosition start = parsePosition(params[0]);
-            ChessPosition end = parsePosition(params[1]);
-            ChessPiece.PieceType promotionPiece = (params.length == 3) ? convertStringToPiece(params[2]) : null;
-
-            ChessMove move = new ChessMove(start, end, promotionPiece);
-            if (game.validMoves(start).contains(move)) {
-                // Placeholder for WebSocket or facade move call
-                return "Move accepted (simulated).";
+                ChessMove move = new ChessMove(start, end, promotionPiece);
+                if (this.game.validMoves(start).contains(move)) {
+                // Make the move
+                    return "";
+                } else {
+                    throw new BadRequestException("Invalid move.");
+                }
             } else {
-                throw new BadRequestException("Invalid move.");
+                throw new BadRequestException("Expected: <source> <destination> <optional: promotion>.");
             }
-        } catch (BadRequestException e) {
-            return e.getMessage();
+        } catch (InvalidMoveException e) {
+            throw new BadRequestException(e.getMessage());
         }
     }
 
@@ -121,199 +108,318 @@ public class GameClient extends Client {
                 """;
     }
 
-    public void drawBoardWithHighlights(ChessGame.TeamColor color, ChessBoard board, Collection<ChessMove> highlights) {
-        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        drawHeader(out, color);
 
-        Map<ChessPosition, ChessPiece> pieces = extractPieces(board);
-        Set<ChessPosition> highlightTargets = new HashSet<>();
-        ChessPosition start = null;
-
-        for (ChessMove move : highlights) {
-            highlightTargets.add(move.getEndPosition());
-            start = move.getStartPosition();
-        }
-
-        List<Integer> rows = new ArrayList<>();
-        List<Character> cols = new ArrayList<>();
-
-        for (int r = 8; r >= 1; r--) rows.add(r);
-        for (char c = 'a'; c <= 'h'; c++) cols.add(c);
-        if (color == ChessGame.TeamColor.BLACK) {
-            Collections.reverse(rows);
-            Collections.reverse(cols);
-        }
-
-        for (int row : rows) {
-            setBorderColor(out);
-            out.print(" " + row + " ");
-            for (char colChar : cols) {
-                int col = colChar - 'a' + 1;
-                ChessPosition pos = new ChessPosition(row, col);
-
-                boolean isStart = start != null && start.equals(pos);
-                boolean isHighlight = highlightTargets.contains(pos);
-                ChessPiece piece = pieces.get(pos);
-
-                printSquare(out, row, col, isStart, isHighlight, piece);
-            }
-            setBorderColor(out);
-            out.print(" " + row + " ");
-            resetColors(out);
-            out.println();
-        }
-
-        drawHeader(out, color);
+    public void printBoard(ChessGame.TeamColor color, ChessGame game) {
+        PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        this.drawHeader(out, color);
+        Collection<ChessMove> moves = new ArrayList();
+        this.drawBoard(out, game, color, moves);
+        this.drawHeader(out, color);
     }
-
-    private void printSquare(PrintStream out, int row, int col, boolean isStart, boolean isHighlight, ChessPiece piece) {
-        if (isStart) {
-            out.print(EscapeSequences.SET_BG_COLOR_YELLOW);  // Start square
-        } else if (isHighlight) {
-            if ((row + col) % 2 == 0) {
-                out.print(EscapeSequences.SET_BG_COLOR_LIGHT_GREY);  // Highlight on light square
-            } else {
-                out.print(EscapeSequences.SET_BG_COLOR_DARK_GREY);   // Highlight on dark square
-            }
-        } else {
-            if ((row + col) % 2 == 0) {
-                out.print(EscapeSequences.SET_BG_COLOR_WHITE);       // Light square
-            } else {
-                out.print(EscapeSequences.SET_BG_COLOR_DARK_GREEN);  // Dark square
-            }
-        }
-
-        out.print(piece == null ? EscapeSequences.EMPTY : getPieceSymbol(piece));
-    }
-
 
     private void drawHeader(PrintStream out, ChessGame.TeamColor color) {
         setBorderColor(out);
-        List<String> headers = Arrays.asList(" a ", " b ", " c ", " d ", " e ", " f ", " g ", " h ");
-        if (color == ChessGame.TeamColor.BLACK) Collections.reverse(headers);
+        List<String> headers = Arrays.asList(" a ", "  b ", "  c ", " d ", "  e ", "  f ", " g ", "  h ");
+        if (color.equals(TeamColor.BLACK)) {
+            headers = headers.reversed();
+        }
+
         out.print("   ");
-        headers.forEach(out::print);
+        Iterator var4 = headers.iterator();
+
+        while(var4.hasNext()) {
+            String c = (String)var4.next();
+            out.print(c);
+        }
+
         out.print("   ");
         resetColors(out);
         out.println();
     }
 
-    public Map<ChessPosition, ChessPiece> extractPieces(ChessBoard board) {
-        Map<ChessPosition, ChessPiece> pieces = new HashMap<>();
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(position);
-                if (piece != null) {
-                    pieces.put(position, piece);
-                }
-            }
-        }
-        return pieces;
-    }
-
-    private String getPieceSymbol(ChessPiece piece) {
-        return switch (piece.getTeamColor()) {
-            case WHITE -> switch (piece.getPieceType()) {
-                case KING -> EscapeSequences.WHITE_KING;
-                case QUEEN -> EscapeSequences.WHITE_QUEEN;
-                case BISHOP -> EscapeSequences.WHITE_BISHOP;
-                case KNIGHT -> EscapeSequences.WHITE_KNIGHT;
-                case ROOK -> EscapeSequences.WHITE_ROOK;
-                case PAWN -> EscapeSequences.WHITE_PAWN;
-            };
-            case BLACK -> switch (piece.getPieceType()) {
-                case KING -> EscapeSequences.BLACK_KING;
-                case QUEEN -> EscapeSequences.BLACK_QUEEN;
-                case BISHOP -> EscapeSequences.BLACK_BISHOP;
-                case KNIGHT -> EscapeSequences.BLACK_KNIGHT;
-                case ROOK -> EscapeSequences.BLACK_ROOK;
-                case PAWN -> EscapeSequences.BLACK_PAWN;
-            };
-        };
-    }
-
-    private void setBorderColor(PrintStream out) {
-        out.print(EscapeSequences.SET_BG_COLOR_DARK_GREEN);
-        out.print(EscapeSequences.SET_TEXT_COLOR_BLACK);
-    }
-
-
     private void drawBoard(PrintStream out, ChessGame game, ChessGame.TeamColor color, Collection<ChessMove> moves) {
-        Set<ChessPosition> highlights = new HashSet<>();
-        ChessPosition start = null;
-        for (ChessMove move : moves) {
+        out.print("\u001b[38;5;15m");
+        List<String> rowNums = Arrays.asList(" 8 ", " 7 ", " 6 ", " 5 ", " 4 ", " 3 ", " 2 ", " 1 ");
+        ChessPiece[][] pieces = game.getBoard().getPieces();
+        Collection<ChessPosition> highlights = new ArrayList();
+        ChessPosition start = new ChessPosition(-1, -1);
+        Iterator var9 = moves.iterator();
+
+        while(var9.hasNext()) {
+            ChessMove move = (ChessMove)var9.next();
             highlights.add(move.getEndPosition());
-            start = move.getStartPosition();
-        }
-
-        List<Integer> rows = new ArrayList<>();
-        List<Character> cols = new ArrayList<>();
-        for (int r = 8; r >= 1; r--) rows.add(r);
-        for (char c = 'a'; c <= 'h'; c++) cols.add(c);
-        if (color == ChessGame.TeamColor.BLACK) {
-            Collections.reverse(rows);
-            Collections.reverse(cols);
-        }
-
-        for (int row : rows) {
-            setBorderColor(out);
-            out.print(" " + row + " ");
-            for (char colChar : cols) {
-                int col = colChar - 'a' + 1;
-                ChessPosition pos = new ChessPosition(row, col);
-
-                boolean isStart = start != null && start.equals(pos);
-                boolean isHighlight = highlights.contains(pos);
-                ChessPiece piece = game.getBoard().getPiece(pos);
-
-                printSquare(out, row, col, isStart, isHighlight, piece);
+            if (color == TeamColor.BLACK) {
+                start = new ChessPosition(move.getStartPosition().getRow() - 1, 8 - move.getStartPosition().getColumn());
+            } else {
+                start = new ChessPosition(8 - move.getStartPosition().getRow(), move.getStartPosition().getColumn() - 1);
             }
+        }
+
+        int row;
+        ChessPiece[][] blackPieces;
+        if (color.equals(TeamColor.BLACK)) {
+            rowNums = rowNums.reversed();
+            ChessPiece[][] blackPiecesTemp = new ChessPiece[8][8];
+
+            int rowIdx = 0;
+            for (ChessPiece[] pieceRow : pieces) {
+                ChessPiece[] reversedRow = new ChessPiece[8];
+                for (int i = 0; i < 8; i++) {
+                    reversedRow[i] = pieceRow[7 - i];
+                }
+                blackPiecesTemp[7 - rowIdx] = reversedRow;
+                rowIdx++;
+            }
+
+            pieces = blackPiecesTemp;
+
+            Collection<ChessPosition> newPositions = new ArrayList<>();
+            for (ChessPosition highlight : highlights) {
+                newPositions.add(new ChessPosition(highlight.getRow() - 1, 8 - highlight.getColumn()));
+            }
+            highlights = newPositions;
+        }
+
+        else {
+            Collection<ChessPosition> newPositions = new ArrayList();
+            Iterator var23 = highlights.iterator();
+
+            while(var23.hasNext()) {
+                ChessPosition highlight = (ChessPosition)var23.next();
+                newPositions.add(new ChessPosition(8 - highlight.getRow(), highlight.getColumn() - 1));
+            }
+
+            highlights = newPositions;
+        }
+
+        row = 0;
+        blackPieces = pieces;
+        int var26 = pieces.length;
+
+        for(int var28 = 0; var28 < var26; ++var28) {
+            ChessPiece[] pieceRow = blackPieces[var28];
             setBorderColor(out);
-            out.print(" " + row + " ");
+            out.print((String)rowNums.get(row));
+            int index = 0;
+            ChessPiece[] var15 = pieceRow;
+            int var16 = pieceRow.length;
+
+            for(int var17 = 0; var17 < var16; ++var17) {
+                ChessPiece piece = var15[var17];
+                ChessPosition position = new ChessPosition(row, index);
+                if (highlights.contains(position)) {
+                    this.highlightPiece(out, index, row);
+                } else if (position.equals(start)) {
+                    out.print("\u001b[48;2;220;220;220m");
+                } else {
+                    this.drawPiece(out, index, row);
+                }
+
+                if (piece == null) {
+                    out.print("   ");
+                } else {
+                    out.print(this.getPiece(piece));
+                }
+
+                ++index;
+            }
+
+            setBorderColor(out);
+            out.print((String)rowNums.get(row));
             resetColors(out);
             out.println();
+            ++row;
+        }
+
+    }
+
+    private void drawPiece(PrintStream out, int index, int row) {
+        if (row % 2 == 0) {
+            if (index % 2 == 0) {
+                out.print("\u001b[48;2;193;154;107m");
+            } else {
+                out.print("\u001b[48;2;84;42;24m");
+            }
+        } else if (index % 2 == 0) {
+            out.print("\u001b[48;2;84;42;24m");
+        } else {
+            out.print("\u001b[48;2;193;154;107m");
+        }
+
+    }
+
+    private void highlightPiece(PrintStream out, int index, int row) {
+        if (row % 2 == 0) {
+            if (index % 2 == 0) {
+                out.print("\u001b[48;5;242m");
+            } else {
+                out.print("\u001b[48;5;238m");
+            }
+        } else if (index % 2 == 0) {
+            out.print("\u001b[48;5;238m");
+        } else {
+            out.print("\u001b[48;5;242m");
+        }
+
+    }
+
+    private String getPiece(ChessPiece piece) {
+        String var10000;
+        if (piece.getTeamColor().equals(TeamColor.WHITE)) {
+            switch (piece.getPieceType()) {
+                case KING:
+                    var10000 = " ♔ ";
+                    break;
+                case QUEEN:
+                    var10000 = " ♕ ";
+                    break;
+                case BISHOP:
+                    var10000 = " ♗ ";
+                    break;
+                case KNIGHT:
+                    var10000 = " ♘ ";
+                    break;
+                case ROOK:
+                    var10000 = " ♖ ";
+                    break;
+                case PAWN:
+                    var10000 = " ♙ ";
+                    break;
+                default:
+                    throw new MatchException((String)null, (Throwable)null);
+            }
+
+            return var10000;
+        } else {
+            switch (piece.getPieceType()) {
+                case KING:
+                    var10000 = " ♚ ";
+                    break;
+                case QUEEN:
+                    var10000 = " ♛ ";
+                    break;
+                case BISHOP:
+                    var10000 = " ♝ ";
+                    break;
+                case KNIGHT:
+                    var10000 = " ♞ ";
+                    break;
+                case ROOK:
+                    var10000 = " ♜ ";
+                    break;
+                case PAWN:
+                    var10000 = " ♟ ";
+                    break;
+                default:
+                    throw new MatchException((String)null, (Throwable)null);
+            }
+
+            return var10000;
         }
     }
 
-    private void resetColors(PrintStream out) {
-        out.print(EscapeSequences.RESET_BG_COLOR);
-        out.print(EscapeSequences.RESET_TEXT_COLOR);
+    private static void setBorderColor(PrintStream out) {
+        out.print("\u001b[48;2;120;62;32m");
+        out.print("\u001b[38;5;0m");
     }
 
-    public void printBoard(ChessGame.TeamColor color, ChessGame game) {
+    private static void resetColors(PrintStream out) {
+        out.print("\u001b[49m");
+        out.print("\u001b[39m");
+    }
+
+    public void highlight(ChessGame.TeamColor color, ChessGame game, Collection<ChessMove> validMoves) {
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        drawHeader(out, color);
-        drawBoard(out, game, color, new ArrayList<>());
-        drawHeader(out, color);
+        this.drawHeader(out, color);
+        this.drawBoard(out, game, color, validMoves);
+        this.drawHeader(out, color);
     }
 
+    public String highlight(String... params) throws BadRequestException {
+        try {
+            if (params.length != 1) {
+                throw new BadRequestException("Expected <position>");
+            } else {
+                String col = String.valueOf(params[0].charAt(1));
+                ChessPosition position = new ChessPosition(Integer.parseInt(col), this.convertHeaderToInt(params[0]));
+                Collection<ChessMove> moves = this.game.validMoves(position);
+                if (moves.isEmpty()) {
+                    throw new BadRequestException("This piece cannot move.");
+                } else {
+                    this.gameClient.highlight(this.userColor, this.game, moves);
+                    return "";
+                }
+            }
+        } catch (NullPointerException var5) {
+            throw new BadRequestException("There is no piece at this location.");
+        }
+    }
+    private int convertHeaderToInt(String position) throws BadRequestException {
+        byte var10000;
+        switch (position.toLowerCase().charAt(0)) {
+            case 'a':
+                var10000 = 1;
+                break;
+            case 'b':
+                var10000 = 2;
+                break;
+            case 'c':
+                var10000 = 3;
+                break;
+            case 'd':
+                var10000 = 4;
+                break;
+            case 'e':
+                var10000 = 5;
+                break;
+            case 'f':
+                var10000 = 6;
+                break;
+            case 'g':
+                var10000 = 7;
+                break;
+            case 'h':
+                var10000 = 8;
+                break;
+            default:
+                throw new BadRequestException("Expected: <source> <destination> <optional: promotion>");
+        }
 
+        return var10000;
+    }
 
     private ChessPiece.PieceType convertStringToPiece(String piece) throws BadRequestException {
-        return switch (piece.toLowerCase()) {
-            case "queen" -> ChessPiece.PieceType.QUEEN;
-            case "rook" -> ChessPiece.PieceType.ROOK;
-            case "knight" -> ChessPiece.PieceType.KNIGHT;
-            case "bishop" -> ChessPiece.PieceType.BISHOP;
-            default -> throw new BadRequestException("Invalid promotion piece.");
-        };
+        ChessPiece.PieceType var10000;
+        switch (piece.toLowerCase()) {
+            case "queen":
+                var10000 = PieceType.QUEEN;
+                break;
+            case "rook":
+                var10000 = PieceType.ROOK;
+                break;
+            case "knight":
+                var10000 = PieceType.KNIGHT;
+                break;
+            case "bishop":
+                var10000 = PieceType.BISHOP;
+                break;
+            default:
+                throw new BadRequestException("Expected: <source> <destination> <optional: promotion>");
+        }
+
+        return var10000;
     }
 
-    private ChessPosition parsePosition(String input) throws BadRequestException {
-        if (input.length() != 2) throw new BadRequestException("Invalid position format.");
-        int row = Character.getNumericValue(input.charAt(1));
-        int col = switch (input.toLowerCase().charAt(0)) {
-            case 'a' -> 1;
-            case 'b' -> 2;
-            case 'c' -> 3;
-            case 'd' -> 4;
-            case 'e' -> 5;
-            case 'f' -> 6;
-            case 'g' -> 7;
-            case 'h' -> 8;
-            default -> throw new BadRequestException("Invalid column letter.");
-        };
-        return new ChessPosition(row, col);
+    private String redraw() throws BadRequestException {
+        if (this.userColor == ChessGame.TeamColor.BLACK) {
+            this.gameClient.printBoard(TeamColor.BLACK, this.game);
+        } else {
+            this.gameClient.printBoard(TeamColor.WHITE, this.game);
+        }
+
+        return "";
     }
+
 }
+
+
