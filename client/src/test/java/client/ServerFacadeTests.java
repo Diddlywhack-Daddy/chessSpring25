@@ -2,8 +2,6 @@ package client;
 
 import backend.ServerFacade;
 import chess.ChessGame;
-import model.request.*;
-import model.result.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import server.Server;

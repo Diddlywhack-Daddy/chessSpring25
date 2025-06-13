@@ -8,7 +8,6 @@ import com.sun.nio.sctp.NotificationHandler;
 import exceptions.BadRequestException;
 import model.AuthData;
 import model.UserData;
-import model.request.*;
 import server.exceptions.*;
 
 import java.util.*;

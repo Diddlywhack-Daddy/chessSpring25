@@ -2,8 +2,6 @@ package backend;
 
 import com.google.gson.Gson;
 import exceptions.BadRequestException;
-import model.request.*;
-import model.result.*;
 import server.exceptions.*;
 
 import java.io.*;

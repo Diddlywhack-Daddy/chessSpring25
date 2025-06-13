@@ -4,7 +4,6 @@ import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.SqlDataAccess;
 import model.*;
-import model.request.*;
 import model.result.CreateGameResult;
 import model.result.ListGamesResult;
 import model.result.LoginResult;
