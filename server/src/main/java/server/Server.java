@@ -31,7 +31,6 @@ public class Server {
         this.gameService = new GameService(dataAccess);
         this.clearService = new ClearService(dataAccess);
         this.authService = new AuthService(dataAccess);
-        port = desiredPort;
     }
 
 
@@ -43,8 +42,8 @@ public class Server {
     }
 
 
-    public int run() {
-        Spark.port(port);
+    public int run(int desiredPort) {
+        Spark.port(desiredPort);
 
         Spark.staticFiles.location("/web");
 

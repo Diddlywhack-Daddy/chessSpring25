@@ -18,8 +18,8 @@ public class ServerFacadeTests {
     @BeforeEach
     public void setup() {
         Server server = new Server(0);
-        int actualPort = server.run();
-        facade = new ServerFacade("http://localhost:" + actualPort);
+        int port = server.run(0);
+        facade = new ServerFacade("http://localhost:" + port);
     }
 
 
