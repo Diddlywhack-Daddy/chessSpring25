@@ -6,9 +6,9 @@ import model.request.RegisterRequest;
 import model.result.LoginResult;
 import model.result.LogoutResult;
 import model.result.RegisterResult;
-import server.exceptions.AlreadyTakenException;
-import server.exceptions.BadRequestException;
-import server.exceptions.UnauthorizedException;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 
 public interface UserService {
     RegisterResult register(RegisterRequest req) throws DataAccessException, BadRequestException, AlreadyTakenException;

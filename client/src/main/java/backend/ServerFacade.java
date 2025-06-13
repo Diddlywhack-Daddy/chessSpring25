@@ -1,7 +1,7 @@
 package backend;
 
-import chess.ChessMove;
 import com.google.gson.Gson;
+import exceptions.BadRequestException;
 import model.request.*;
 import model.result.*;
 import server.exceptions.*;

@@ -6,8 +6,8 @@ import model.request.CreateGameRequest;
 import model.result.CreateGameResult;
 import model.GameData;
 import server.ErrorMessage;
-import server.exceptions.BadRequestException;
-import server.exceptions.UnauthorizedException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 import service.GameService;
 import spark.*;
 

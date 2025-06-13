@@ -3,10 +3,11 @@ package clients;
 import backend.ServerFacade;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
+import exceptions.BadRequestException;
 import model.AuthData;
 import model.UserData;
 import chess.*;
-import server.exceptions.BadRequestException;
+
 
 public abstract class Client {
 

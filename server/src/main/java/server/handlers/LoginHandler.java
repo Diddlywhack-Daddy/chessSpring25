@@ -5,8 +5,8 @@ import dataaccess.DataAccessException;
 import model.request.LoginRequest;
 import model.result.LoginResult;
 import server.ErrorMessage;
-import server.exceptions.BadRequestException;
-import server.exceptions.UnauthorizedException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 import service.UserService;
 import spark.*;
 

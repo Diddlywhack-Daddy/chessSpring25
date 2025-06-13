@@ -1,6 +1,6 @@
 package clients;
 
-import server.exceptions.BadRequestException;
+import exceptions.BadRequestException;
 
 import java.util.Scanner;
 

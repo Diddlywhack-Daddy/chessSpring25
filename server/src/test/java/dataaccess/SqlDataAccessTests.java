@@ -7,7 +7,7 @@ import model.UserData;
 import model.request.ListGamesRequest;
 import model.result.ListGamesResult;
 import org.junit.jupiter.api.*;
-import server.exceptions.UnauthorizedException;
+import exceptions.UnauthorizedException;
 import service.GameService;
 
 import java.util.UUID;

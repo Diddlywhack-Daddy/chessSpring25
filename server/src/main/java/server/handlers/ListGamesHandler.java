@@ -5,7 +5,7 @@ import dataaccess.DataAccessException;
 import model.request.ListGamesRequest;
 import model.result.ListGamesResult;
 import server.ErrorMessage;
-import server.exceptions.UnauthorizedException;
+import exceptions.UnauthorizedException;
 import service.GameService;
 import spark.*;
 

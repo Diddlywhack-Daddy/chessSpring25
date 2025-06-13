@@ -2,7 +2,6 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.DataAccessException;
-import dataaccess.MemoryDataAccess;
 import dataaccess.SqlDataAccess;
 import model.*;
 import model.request.*;
@@ -11,13 +10,8 @@ import model.result.ListGamesResult;
 import model.result.LoginResult;
 import model.result.RegisterResult;
 import org.junit.jupiter.api.*;
-import server.exceptions.AlreadyTakenException;
-import server.exceptions.BadRequestException;
-import server.exceptions.UnauthorizedException;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

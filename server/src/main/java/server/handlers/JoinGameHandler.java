@@ -1,8 +1,10 @@
 package server.handlers;
 
-import chess.ChessGame;
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 import model.request.JoinGameRequest;
 import server.ErrorMessage;
 import server.exceptions.*;

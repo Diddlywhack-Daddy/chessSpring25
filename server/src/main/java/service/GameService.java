@@ -3,6 +3,9 @@ package service;
 import chess.ChessGame;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 import model.*;
 import model.request.CreateGameRequest;
 import model.request.JoinGameRequest;
@@ -12,7 +15,6 @@ import model.result.JoinGameResult;
 import model.result.ListGamesResult;
 import server.exceptions.*;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

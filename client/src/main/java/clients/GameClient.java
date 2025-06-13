@@ -2,7 +2,7 @@ package clients;
 
 import backend.ServerFacade;
 import chess.*;
-import server.exceptions.BadRequestException;
+import exceptions.BadRequestException;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -10,10 +10,6 @@ import java.util.*;
 
 import chess.ChessGame.*;
 import chess.ChessPiece.PieceType;
-
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class GameClient extends Client {
     private final ServerFacade server;

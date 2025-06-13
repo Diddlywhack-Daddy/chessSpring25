@@ -5,8 +5,8 @@ import dataaccess.DataAccessException;
 import model.request.RegisterRequest;
 import model.result.RegisterResult;
 import server.ErrorMessage;
-import server.exceptions.AlreadyTakenException;
-import server.exceptions.BadRequestException;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
 import service.UserService;
 import spark.*;
 

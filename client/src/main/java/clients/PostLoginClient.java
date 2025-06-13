@@ -5,12 +5,12 @@ import chess.ChessGame;
 import com.sun.nio.sctp.HandlerResult;
 import com.sun.nio.sctp.Notification;
 import com.sun.nio.sctp.NotificationHandler;
+import exceptions.BadRequestException;
 import model.AuthData;
 import model.UserData;
 import model.request.*;
 import server.exceptions.*;
 
-import java.io.Console;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 

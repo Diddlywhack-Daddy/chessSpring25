@@ -7,9 +7,9 @@ import model.result.CreateGameResult;
 import model.request.JoinGameRequest;
 import model.result.JoinGameResult;
 import model.result.ListGamesResult;
-import server.exceptions.AlreadyTakenException;
-import server.exceptions.BadRequestException;
-import server.exceptions.UnauthorizedException;
+import exceptions.AlreadyTakenException;
+import exceptions.BadRequestException;
+import exceptions.UnauthorizedException;
 
 public interface GameService {
 
