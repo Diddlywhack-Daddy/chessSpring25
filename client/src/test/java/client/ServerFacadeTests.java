@@ -6,6 +6,7 @@ import model.request.*;
 import model.result.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import server.Server;
 import server.exceptions.BadRequestException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,8 +17,11 @@ public class ServerFacadeTests {
 
     @BeforeEach
     public void setup() {
-        facade = new ServerFacade("http://localhost:8080");
+        Server server = new Server(0);
+        int actualPort = server.run();
+        facade = new ServerFacade("http://localhost:" + actualPort);
     }
+
 
     @Test
     public void testRegisterSuccess() {
