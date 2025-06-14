@@ -13,6 +13,14 @@
 
     <packaging>jar</packaging>
 
+    <repositories>
+        <repository>
+            <id>local-repo</id>
+            <name>Local Repository</name>
+            <url>file://C:/temp</url>
+        </repository>
+    </repositories>
+
     <build>
         <finalName>shared</finalName>
         <plugins>

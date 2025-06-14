@@ -3,11 +3,13 @@ package service;
 import chess.*;
 import dataaccess.*;
 import exceptions.*;
+import model.AuthData;
+import model.GameData;
 import model.request.*;
 import model.result.*;
 
 
-
+import java.util.Collection;
 import java.util.List;
 
 public class GameService implements service.interfaces.GameService {

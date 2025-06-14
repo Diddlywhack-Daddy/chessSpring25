@@ -5,6 +5,11 @@ import dataaccess.DataAccessException;
 import exceptions.AlreadyTakenException;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
+import model.request.LoginRequest;
+import model.request.RegisterRequest;
+import model.result.LoginResult;
+import model.result.LogoutResult;
+import model.result.RegisterResult;
 import org.mindrot.jbcrypt.BCrypt;
 import model.*;
 

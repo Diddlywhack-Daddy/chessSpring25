@@ -4,9 +4,8 @@ import chess.ChessGame;
 import dataaccess.DataAccessException;
 import dataaccess.SqlDataAccess;
 import model.*;
-import model.result.CreateGameResult;
-import model.result.ListGamesResult;
-import model.result.LoginResult;
+import model.request.*;
+import model.result.*;
 import model.result.RegisterResult;
 import org.junit.jupiter.api.*;
 

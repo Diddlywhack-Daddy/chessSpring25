@@ -2,6 +2,7 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
+import model.GameData;
 import model.request.CreateGameRequest;
 import model.result.CreateGameResult;
 
