@@ -1,21 +1,13 @@
 package service;
 
-import chess.ChessGame;
-import dataaccess.DataAccess;
-import dataaccess.DataAccessException;
-import exceptions.AlreadyTakenException;
-import exceptions.BadRequestException;
-import exceptions.UnauthorizedException;
-import model.*;
-import model.request.CreateGameRequest;
-import model.request.JoinGameRequest;
-import model.request.ListGamesRequest;
-import model.result.CreateGameResult;
-import model.result.JoinGameResult;
-import model.result.ListGamesResult;
-import server.exceptions.*;
+import chess.*;
+import dataaccess.*;
+import exceptions.*;
+import model.request.*;
+import model.result.*;
 
-import java.util.Collection;
+
+
 import java.util.List;
 
 public class GameService implements service.interfaces.GameService {
@@ -68,7 +60,7 @@ public class GameService implements service.interfaces.GameService {
             throw new UnauthorizedException("Error: Unauthorized access.");
         }
 
-        Collection<GameData> gameList = List.of(data.listGames());  // or Arrays.asList(...) if array
+        Collection<GameData> gameList = List.of(data.listGames());
         return new ListGamesResult(gameList);
     }
 
@@ -90,7 +82,7 @@ public class GameService implements service.interfaces.GameService {
             throw new BadRequestException("Error: Invalid request.");
         }
 
-        // 🔽 DEBUG: Print all games before fetching a specific one
+        // DEBUG: Print all games before fetching a specific one
         System.out.println("=== Current Games in DB BEFORE getGame ===");
         for (GameData g : data.listGames()) {
             System.out.printf("GameID: %d, Name: %s, White: %s, Black: %s%n",

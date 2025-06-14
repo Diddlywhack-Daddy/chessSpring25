@@ -4,11 +4,11 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.request.CreateGameRequest;
 import model.result.CreateGameResult;
-import model.GameData;
+
 import server.ErrorMessage;
 import exceptions.BadRequestException;
 import exceptions.UnauthorizedException;
-import service.GameService;
+import service.interfaces.GameService;
 import spark.*;
 
 public class CreateGameHandler implements Route {

@@ -2,8 +2,6 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
-import model.request.ListGamesRequest;
-import model.result.ListGamesResult;
 import server.ErrorMessage;
 import exceptions.UnauthorizedException;
 import service.GameService;

@@ -19,7 +19,7 @@ public class Server {
     private final AuthService authService;
     private int port;
 
-    public Server(int desiredPort) {
+    public Server() {
         DataAccess dataAccess;
         try {
             dataAccess = new SqlDataAccess();
