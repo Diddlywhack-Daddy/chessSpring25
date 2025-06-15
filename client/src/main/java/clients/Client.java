@@ -44,8 +44,6 @@ public abstract class Client {
     }
 
 
-
-
     protected void assertNotEmpty(String... params) throws BadRequestException {
         for (String param : params) {
             if (param.isEmpty() || param.equals(" ")) {
@@ -55,7 +53,4 @@ public abstract class Client {
     }
 
 
-    public HandlerResult handleNotification(Notification notification, Object o) {
-        return null;
-    }
 }
