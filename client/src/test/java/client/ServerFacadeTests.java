@@ -2,95 +2,129 @@ package client;
 
 import backend.ServerFacade;
 import chess.ChessGame;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import server.Server;
 import exceptions.BadRequestException;
+import model.request.*;
+import model.result.*;
+import org.junit.jupiter.api.*;
+import server.Server;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
 
-    private ServerFacade facade;
+    private static Server server;
+    private static ServerFacade facade;
+    private static String username = "user1";
+    private static String password = "pass1";
+    private static String email = "user1@email.com";
+    private String authToken;
 
-    @BeforeEach
-    public void setup() {
-        Server server = new Server();
-        int port = server.run(0);
+    @BeforeAll
+    public static void init() {
+        server = new Server();
+        var port = server.run(0);
+        System.out.println("Started test HTTP server on " + port);
         facade = new ServerFacade("http://localhost:" + port);
     }
 
-
-    @Test
-    public void testRegisterSuccess() {
-        var request = new RegisterRequest("testuser", "testpass", "test@example.com");
-        try {
-            RegisterResult result = facade.register(request);
-            assertNotNull(result.authToken());
-            assertEquals("testuser", result.username());
-        } catch (BadRequestException e) {
-            fail("Register should not throw: " + e.getMessage());
-        }
+    @BeforeEach
+    public void clearServer() throws Exception {
+        facade.clear();
     }
 
     @Test
-    public void testLoginFailure_WrongCredentials() {
-        var request = new LoginRequest("wronguser", "wrongpass");
+    public void registerSuccess() throws Exception {
+        var request = new RegisterRequest(username, password, email);
+        var result = facade.register(request);
+        assertNotNull(result.authToken());
+        assertEquals(username, result.username());
+    }
+
+    @Test
+    public void registerFailure() {
+        var request = new RegisterRequest(username, null, email);
+        assertThrows(BadRequestException.class, () -> facade.register(request));
+    }
+
+    @Test
+    public void loginSuccess() throws Exception {
+        facade.register(new RegisterRequest(username, password, email));
+        var result = facade.login(new LoginRequest(username, password));
+        assertNotNull(result.authToken());
+        assertEquals(username, result.username());
+    }
+
+    @Test
+    public void loginFailure() {
+        var request = new LoginRequest("fakeuser", "wrongpass");
         assertThrows(BadRequestException.class, () -> facade.login(request));
     }
 
     @Test
-    public void testCreateGame() {
-        try {
-            var reg = facade.register(new RegisterRequest("creator", "pass", "a@b.com"));
-            var req = new CreateGameRequest(reg.authToken(), "Cool Game");
-            var res = facade.createGame(req);
-            assertTrue(res.gameID() > 0);
-        } catch (BadRequestException e) {
-            fail("Unexpected error during game creation: " + e.getMessage());
-        }
+    public void logoutSuccess() throws Exception {
+        var register = facade.register(new RegisterRequest(username, password, email));
+        var logoutRequest = new LogoutRequest(register.authToken());
+        assertDoesNotThrow(() -> facade.logout(logoutRequest));
     }
 
     @Test
-    public void testListGames() {
-        try {
-            var reg = facade.register(new RegisterRequest("lister", "pass", "a@b.com"));
-            var res = facade.listGames(new ListGamesRequest(reg.authToken()));
-            assertNotNull(res.games());
-        } catch (BadRequestException e) {
-            fail("Unexpected error during game list: " + e.getMessage());
-        }
+    public void logoutFailure() {
+        var logoutRequest = new LogoutRequest("bad-token");
+        assertThrows(BadRequestException.class, () -> facade.logout(logoutRequest));
     }
 
     @Test
-    public void testJoinGame() {
-        try {
-            var reg = facade.register(new RegisterRequest("joiner", "pass", "a@b.com"));
-            var create = facade.createGame(new CreateGameRequest(reg.authToken(), "Joinable Game"));
-            var req = new JoinGameRequest(ChessGame.TeamColor.WHITE, create.gameID(),reg.authToken());
-            var result = facade.joinGame(req);
-            assertNotNull(result);
-        } catch (BadRequestException e) {
-            fail("Unexpected error during join: " + e.getMessage());
-        }
+    public void listGamesSuccess() throws Exception {
+        var register = facade.register(new RegisterRequest(username, password, email));
+        var result = facade.listGames(new ListGamesRequest(register.authToken()));
+        assertNotNull(result.games());
     }
 
     @Test
-    public void testLogout() {
-        try {
-            var reg = facade.register(new RegisterRequest("logoutuser", "pass", "a@b.com"));
-            facade.logout(new LogoutRequest(reg.authToken()));
-        } catch (BadRequestException e) {
-            fail("Unexpected error during logout: " + e.getMessage());
-        }
+    public void listGamesFailure() {
+        var request = new ListGamesRequest("bad-token");
+        assertThrows(BadRequestException.class, () -> facade.listGames(request));
     }
 
     @Test
-    public void testClear() {
-        try {
+    public void createGameSuccess() throws Exception {
+        var register = facade.register(new RegisterRequest(username, password, email));
+        var request = new CreateGameRequest("MyGame", register.authToken());
+        var result = facade.createGame(request);
+        assertNotNull(result.gameID());
+    }
+
+    @Test
+    public void createGameFailure() {
+        var request = new CreateGameRequest("GameWithBadAuth", "bad-token");
+        assertThrows(BadRequestException.class, () -> facade.createGame(request));
+    }
+
+    @Test
+    public void joinGameSuccess() throws Exception {
+        var register = facade.register(new RegisterRequest(username, password, email));
+        var createResult = facade.createGame(new CreateGameRequest("GameToJoin", register.authToken()));
+        var joinRequest = new JoinGameRequest(ChessGame.TeamColor.WHITE, createResult.gameID(),register.authToken());
+        var result = facade.joinGame(joinRequest);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void joinGameFailure() {
+        var joinRequest = new JoinGameRequest(ChessGame.TeamColor.BLACK,9999,"bad-token" );
+        assertThrows(BadRequestException.class, () -> facade.joinGame(joinRequest));
+    }
+
+    @Test
+    public void clearSuccess() {
+        assertDoesNotThrow(() -> facade.clear());
+    }
+
+    @Test
+    public void clearIdempotent() {
+        assertDoesNotThrow(() -> {
             facade.clear();
-        } catch (BadRequestException e) {
-            fail("Clear should not throw");
-        }
+            facade.clear();
+        });
     }
 }
