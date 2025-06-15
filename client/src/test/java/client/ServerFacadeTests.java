@@ -89,7 +89,7 @@ public class ServerFacadeTests {
     @Test
     public void createGameSuccess() throws Exception {
         var register = facade.register(new RegisterRequest(username, password, email));
-        var request = new CreateGameRequest("MyGame", register.authToken());
+        var request = new CreateGameRequest( register.authToken(),"MyGame");
         var result = facade.createGame(request);
         assertNotNull(result.gameID());
     }
@@ -103,11 +103,16 @@ public class ServerFacadeTests {
     @Test
     public void joinGameSuccess() throws Exception {
         var register = facade.register(new RegisterRequest(username, password, email));
-        var createResult = facade.createGame(new CreateGameRequest("GameToJoin", register.authToken()));
-        var joinRequest = new JoinGameRequest(ChessGame.TeamColor.WHITE, createResult.gameID(),register.authToken());
-        var result = facade.joinGame(joinRequest);
-        assertNotNull(result);
+        var createResult = facade.createGame(new CreateGameRequest( register.authToken(),"GameToJoin"));
+
+        var whiteJoin = facade.joinGame(new JoinGameRequest(ChessGame.TeamColor.WHITE, createResult.gameID(),register.authToken()));
+        var blackJoin = facade.joinGame(new JoinGameRequest(ChessGame.TeamColor.BLACK, createResult.gameID(),register.authToken()));
+
+        assertNull(whiteJoin);
+        assertNull(blackJoin);
     }
+
+
 
     @Test
     public void joinGameFailure() {
